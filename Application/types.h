@@ -22,28 +22,10 @@
 #define RECEIVER 0
 #define TRANSMITTER 1
 
-
-// PACKETS
-
-#define P_CONTROL_DATA 1
-#define P_CONTROL_START 2
-#define P_CONTROL_END 3
-#define P_N       255
-#define P_T_SIZE 0
-#define P_T_NAME 1
-#define P_T_SHA1 2
-
 // LINK
 
 #define MAX_FRAME_SIZE 512 // Frame max size
 #define STUFF_MAX_SIZE MAX_SIZE*2 // Stuff frame max size
-
-// STUFFING
-
-#define FLAG 0x7E
-#define FLAG_AUX 0x5E
-#define ESCAPE 0x7D
-#define ESCAPE_AUX 0x5D
 
 // FRAMES
 
@@ -60,6 +42,22 @@
 #define FRAME_C_REJ0    0x01
 #define FRAME_C_REJ1    0x81
 
+// PACKETS
+
+#define P_CONTROL_DATA 1
+#define P_CONTROL_START 2
+#define P_CONTROL_END 3
+#define P_N       255
+#define P_T_SIZE 0
+#define P_T_NAME 1
+#define P_T_SHA1 2
+
+// STUFFING
+
+#define FLAG 0x7E
+#define FLAG_AUX 0x5E
+#define ESCAPE 0x7D
+#define ESCAPE_AUX 0x5D
 
 struct applicationLayer {
   int fileDescriptor; /*Descritor correspondente à porta série*/
