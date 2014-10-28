@@ -38,6 +38,7 @@ int receiver(){
   char writeBUF[MAX_FRAME_SIZE - 6];
 
   while(1) {
+    
     int bufferSize = llread(buffer, MAX_FRAME_SIZE - 6);
 
     if(bufferSize < -1) {
@@ -90,7 +91,6 @@ int receiver(){
 
     }
   }
-
 }
 int transmitter(){
   numSeq = 0;
@@ -107,31 +107,4 @@ int read() {
 
 int write() {
 
-}
-
-int main(int argc, char* argv[])
-{
-  if (argc < 4)
-    {
-      printf("./program <r/w> <dev> <file>\n");
-      return -1;
-      }
-
-
-  char *mode = argv[1];
-  char *device = argv[2];
-  char *filename=argv[3];
-
-  if(mode[0]!='w' && mode[0] !='r' )
-  {
-    printf("./program <r/w> <dev> <file>\n");
-    return -1;
-  }
-  else if(mode[0] == 'w')
-  return Transmissor();
-  else if(mode[0] == 'r')
-  return Receiver();
-
-
-  return -1;
 }
