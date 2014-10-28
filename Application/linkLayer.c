@@ -245,7 +245,7 @@ void validator(unsigned char* frame, int frameSize) {
 
     while(STOP == FALSE) {
         char tmp[2];
-        read(linkData.fileDescriptor, tmp, 1);
+        read(linkLayer.fileDescriptor, tmp, 1);
 
 
 
@@ -274,15 +274,15 @@ int llclose() {
 	if(mode == TRANSMITTER){
 		char discS[5];
 
-		createSupervisionFrame(discS,FRAME_A_T,LFC_C_DISC);
+		createSupervisionFrame(discS,FRAME_A_T,FRAME_C_DISC);
 		memcpy(&linkLayer.frame[0], &discS[0], 5);
-    	linkData.frameSize = 5;
-    	linkData.numFailedTransmissions = 0;
+    	linkLayer.frameSize = 5;
+    	linkLayer.numFailedTransmissions = 0;
 
    	 	resendFrame_alarm(0);
 
    	 	char discR[5];
-    	createSupervisionFrame(discR,FRAME_A_T,LFC_C_DISC);
+    	createSupervisionFrame(discR,FRAME_A_T,FRAME_C_DISC);
 
     	validator(discReceived, 5);
 
@@ -291,8 +291,8 @@ int llclose() {
     	char UA[5];
     	createSupervisionFrame(UA,FRAME_A_T,FRAME_C_UA);
 		memcpy(&linkLayer.frame[0], &UA[0], 5);
-    	linkData.frameSize = 5;
-    	linkData.numFailedTransmissions = 0;
+    	linkLayer.frameSize = 5;
+    	linkLayer.numFailedTransmissions = 0;
 
    		resendFrame_alarm(0);
         validator(UA, 5);
@@ -304,7 +304,7 @@ int llclose() {
 	}
 	if(mode == RECEIVER){
 		char discR[5];
-    	createSupervisionFrame(discR,FRAME_A_T,LFC_C_DISC);
+    	createSupervisionFrame(discR,FRAME_A_T,FRAME_C_DISC);
 
     	validator(discReceived, 5);
 
@@ -312,10 +312,10 @@ int llclose() {
 
     	char discS[5];
 
-		createSupervisionFrame(discS,FRAME_A_T,LFC_C_DISC);
+		createSupervisionFrame(discS,FRAME_A_T,FRAME_C_DISC);
 		memcpy(&linkLayer.frame[0], &discS[0], 5);
-    	linkData.frameSize = 5;
-    	linkData.numFailedTransmissions = 0;
+    	linkLayer.frameSize = 5;
+    	linkLayer.numFailedTransmissions = 0;
 
    	 	resendFrame_alarm(0);
 	}
@@ -344,9 +344,9 @@ int waitResponse() {
 
 
 
-        if(pos == 0 && tmp[0] == LFC_FLAG) {
+        if(pos == 0 && tmp[0] == FLAG) {
             pos++;
-        } else if(pos == 1 && tmp[0] == LFC_A_T) {
+        } else if(pos == 1 && tmp[0] == FRAME_A_T) {
             rf[0] = tmp[0];
             pos++;
         } else if(pos == 2 && linkLayer.sequenceNumber == 0 && tmp[0] == FRAME_C_RR1) {
@@ -388,7 +388,7 @@ void sendREJ(int mode) {
 
     char rej[5];
 	createSupervisionFrame(rej,FRAME_A_T,C);
-    write(linkData.fileDescriptor, rej, 5);
+    write(linkLayer.fileDescriptor, rej, 5);
 
     printf("Sent REJ\n");
 }
@@ -417,9 +417,9 @@ int llwrite(unsigned char * buffer, int length) {
     uFrame[4+length] = xor;
     uFrame[4+length+1] = FLAG;
 
-    linkData.frameSize = byteStuffing(uFrame, 4+length+2, linkLayer.frame);
+    linkLayer.frameSize = byteStuffing(uFrame, 4+length+2, linkLayer.frame);
 
-    linkData.numFailedTransmissions = 0;
+    linkLayer.numFailedTransmissions = 0;
     resendFrame_alarm(0);
 
     while(TRUE) {
@@ -441,4 +441,177 @@ int llwrite(unsigned char * buffer, int length) {
         linkLayer.sequenceNumber = 0;
 
     return length + 6;
+}
+
+int llread(unsigned char * buffer, int length) {
+
+
+
+    if(length > MAX_FRAME_SIZE-6) {
+        printf("ERROR: Invalid Length\n");
+        return -2;
+    }
+
+    char sFrame[MAX_FRAME_SIZE*2];
+    char uFrame[STUFF_MAX_SIZE];
+    int thisSequenceNumber;
+
+    int pos = 0;
+    int flag = 0;
+
+    while (flag < 2) {
+
+        if(pos >= MAX_FRAME_SIZE*2) {
+            pos = 0;
+            flag = 0;          
+        }
+
+        int res = read(linkLayer.fileDescriptor, &sFrame[pos], 1); 
+        if(sFrame[pos] == FLAG && flag == 0) {
+            pos++;
+            flag++;
+
+
+        } else if(sFrame[pos] == FLAG && flag == 1 && pos == 1) {
+            continue;
+
+
+        } else if(sFrame[pos] == FLAG && flag == 1 && pos < 4) {
+            pos = 1;
+            flag = 1;
+
+
+        } else if(sFrame[pos] != FLAG && flag == 0) {
+            continue;
+
+
+        } else if(flag == 1) {
+
+            if(pos == 1){
+                if(sFrame[pos] != FRAME_A_T) {
+                    sendREJ(linkLayer.sequenceNumber);
+                    return -4;
+                } else {
+                    pos++;
+                }
+            } else if(pos == 2) {
+                if(sFrame[pos] == FRAME_C_DISC) {
+                    pos++;
+                } else if(sFrame[pos] == FRAME_C_I0) {
+                    thisSequenceNumber = 0;
+                    pos++;
+                } else if(sFrame[pos] == FRAME_C_I1) {
+                    thisSequenceNumber = 1;
+                    pos++;
+                } else {              
+                    sendREJ(linkLayer.sequenceNumber);
+                    return -4;
+                }
+            } else if(pos == 3) {
+                if(sFrame[pos] != (sFrame[pos-2]^sFrame[pos-1]) ){
+                    sendREJ(thisSequenceNumber);
+                    return -4;
+                } else {
+                    pos++;
+                }
+
+            } else if(sFrame[pos] == FLAG) {
+                pos++;
+                flag++;
+
+
+            } else {
+                pos++;
+            }
+        }
+    }
+    int uFrameSize = unstuffing(sFrame, pos, uFrame);
+
+    if(uFrameSize == 5) {
+
+        if(uFrame[2] == FRAME_C_DISC) {
+
+
+            linkLayer.frame[0] = FLAG;
+            linkLayer.frame[1] = FRAME_A_T;
+            linkLayer.frame[2] = FRAME_C_DISC;    
+            linkLayer.frame[3] = linkLayer.frame[1]^linkLayer.frame[2];
+            linkLayer.frame[4] = FLAG;
+
+            linkLayer.frameSize = 5;
+            linkLayer.numFailedTransmissions = 0;
+
+            resendFrame_alarm(0);
+
+
+            unsigned char uaDisc[5];
+            uaDisc[0] = FLAG;
+            uaDisc[1] = FRAME_A_T;
+            uaDisc[2] = FRAME_C_UA;
+            uaDisc[3] = uaDisc[1]^uaDisc[2];
+            uaDisc[4] = FLAG;
+
+            dfaReceive(uaDisc, 5);
+
+            alarm(0);
+
+            return -1;
+
+
+        } else {
+            return -3;
+        }
+
+
+    } else if(uFrameSize > 5) {
+
+        int i;
+        int xor = 0;
+        for(i = 4; i < uFrameSize-2; i++)
+            xor ^= uFrame[i];
+
+
+        if(xor != uFrame[uFrameSize-2]) {
+            printf("**BCC2 - XOR FAILED**\n");
+            sendREJ(thisSequenceNumber);
+            return -4;
+        }
+    } else {
+        printf("Unexpected Error on llread()\n");
+        exit(-1);
+    }
+
+    
+
+    if(length < linkLayer.frameSize-7)
+        return -2;
+
+
+    unsigned char temp[5];
+    temp[0] = FLAG;
+    temp[1] = FRAME_A_T;
+
+    if(thisSequenceNumber == 0) {
+        temp[2] = LFC_C_RR1;        
+    } else {
+        temp[2] = LFC_C_RR0;
+    }
+
+    temp[3] = temp[1]^temp[2];
+    temp[4] = FLAG;
+
+    write(linkLayer.fileDescriptor, temp, 5);
+    
+    if(linkLayer.sequenceNumber != thisSequenceNumber)
+        return llread(buffer, length);
+
+    if(thisSequenceNumber == 0)
+        linkLayer.sequenceNumber = 1;
+    else
+        linkLayer.sequenceNumber = 0;
+
+
+
+    memcpy(&buffer[0], &uFrame[4], uFrameSize-6);
+    return uFrameSize-6;
 }
