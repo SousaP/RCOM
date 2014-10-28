@@ -65,7 +65,7 @@ struct applicationLayer {
   int fileDescriptor; /*Descritor correspondente à porta série*/
   int status; /*TRANSMITTER | RECEIVER*/
   int dataSize;
-  char filename[257];
+  char filename[256];
   unsigned int sequenceNumber;
 };
 
