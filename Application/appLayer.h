@@ -3,16 +3,15 @@
 
 #include "types.h"
 
+struct stat st;
 struct appicationLayer appLayer;
 
-int create_file( char* filename);
-int open_file(char* filename);
-void close_file(int fd);
+int createFile( char* filename);
+int openFile(char* filename);
 
-int teceiver();
+int receiver();
 int transmitter();
 
-int read();
 int write();
 
 #endif

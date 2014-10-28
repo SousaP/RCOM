@@ -1,20 +1,17 @@
 #include "appLayer.h"
+#include "packets.h"
 #include <openssl/sha.h>
 
 int numSeq;
 int size;
 
-int create_file(char* filename){
+int createFile(char* filename){
   //retorna o fd do ficheiro que cria
   printf("\nCreating file %s", filename);
   return open(filename, O_WRONLY | O_CREAT | O_APPEND | O_TRUNC, 0744);
 }
 
-void close_file(int fd){
-  close(fd);
-}
-
-int open_file(char* filename){
+int openFile(char* filename){
 //retorna o Fd do ficheiro que tenta abrir
   int file_fd = open(filename, O_RDONLY);
 
@@ -56,10 +53,10 @@ int receiver(){
     if(buffer[0] == P_CONTROL_START) {
       printf("Transmition started.......\n");
 
-      int sizeTemp = (int) buffer[2];
+      int sizeT = (int) buffer[2];
 
       char sizeC[100];
-      memcpy(&sizeC[0], &buffer[3], sizeTemp);
+      memcpy(&sizeC[0], &buffer[3], sizeT);
       size = atoi(&sizechar[0]);
     }
     else if(buffer[0] == P_CONTROL_END) {
@@ -107,20 +104,63 @@ int receiver(){
       }
     }
   }
+  printf("%d frames received. %d failed frames\n", receivedFrames, badFrames);
+  close(fileW);
 }
-int transmitter(){
+
+int transmitter() {
   numSeq = 0;
   appLayer.fileDescriptor = llopen(TRANSMITTER);
 
   write();
 
   lldisc();
-}
 
-int read() {
-
+  return 0;
 }
 
 int write() {
+  stat(appLayer.filename, &st);
+  size = st.st_size;
 
+  char bufferS[MAX_FRAME_SIZE-6];
+  int sizeP = createControlStartPacket(bufferS, appLayer.filename, size);
+  llwrite(bufferS, sizeP);
+
+  char* dataP = (char*) malloc(size + 5);
+  int fileW = openFile(appLayer.filename);
+
+  if(read(fileW, dataP, size) == -1) {
+    printf("Error opening file");
+    llclose();
+    return -1;
+  }
+
+  unsigned char hash[256];
+  SHA1(data, size, hash);
+
+  char data[MAX_FRAME_SIZE-6];
+  char packetAux[MAX_FRAME_SIZE-6];
+  int framesSent = 0;
+  for(i = 0; i < (int) size/appLayer.dataSize; i++) {
+    memcpy(&data[0], &dataP[i*appLayer.dataSize], appLayer.dataSize);
+    int frameSize = createDataPacket(packetAux, sequenceNumber, appLayer.dataSize, data);
+    llwrite(packetAux, frameSize);
+    framesSent++;
+  }
+
+  if(i * appLayer.dataSize < size) {
+    memcpy(&data[0], &dataP[i*appLayer.dataSize], size - i *appLayer.dataSize);
+    int frameSize = createDataPacket(packetAux, sequenceNumber, size - i * appLayer.dataSize, data);
+    llwrite(packetAux, frameSize);
+    framesSent++;
+  }
+
+  printf("%d packets sent!\n", framesSent);
+
+  char bufferE[MAX_FRAME_SIZE-6];
+  sizeP = createControlEndPacket(bufferE, hash);
+  llwrite(bufferE, sizeP);
+
+  return 0;
 }

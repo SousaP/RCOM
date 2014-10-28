@@ -8,7 +8,7 @@
 *@ret int -> Total packet size
 */
 int createDataPacket(char* packet, int seqNumber, int length, char* data) {
-	packet[0] = 0x01;
+	packet[0] = P_CONTROL_DATA;
 	packet[1] = seqNumber % 128;
 	packet[2] = length / 256;
 	packet[3] = length % 256;
@@ -33,32 +33,30 @@ int createDataPacket(char* packet, int seqNumber, int length, char* data) {
 *@ret int -> Total packet size
 */
 
-int createControlPacket(char* packet, char control, char T1, char L1, char* V1, 
-	char T2, char L2, char* V2, char T3, char L3, char* V3) {
-	packet[0] = control;
-	packet[1] = T1;
-	packet[2] = L1;
+int createControlStartPacket(char* packet, char* filename, char size) {
+
+	sprintf(&packet[3], "%d", size);
+	packet[0] = P_CONTROL_START;
+	packet[1] = P_T_SIZE;
+	packet[2] = strlen(packet[3]);
+	packet[3 + (int) packet[2]] = P_T_NAME;
+	packet[4 + (int) packet[2]] = strlen(filename);
+	sprintf(&packet[5 + (int)packet[2]], "%d", filename);
+
+	return 4 + (int)packet[2] + strlen(filename);
+}
+
+int createControlEndPacket(char* packet, char* hash) {
+	packet[0] = P_CONTROL_END;
+	packet[1] = P_T_SHA1;
+	packet[2] = strlen(hash);
 
 	int i;
-	for(i = 0; i < L1; i++) {
-		packet[3+i] = V1[i];
+	for(i = 0; i < (int) packet[2]; i++) {
+		packet[i+3] = hash[i];
 	}
 
-	packet[3 + L1] = T2;
-	packet[4 + L1] = L2;
-
-	for(i = 0; i < L2; i++) {
-		packet[5 + L1] = V2[i];
-	}
-
-	packet[5 + L2] = T3;
-	packet[6 + L2] = L3;
-
-	for(i = 0; i < L3; i++) {
-		packet[7 + L2] = V3[i];
-	}
-
-	return (7 + L1 + L2 + L3);
+	return 3 + (int) packet[2];
 }
 
 /*
