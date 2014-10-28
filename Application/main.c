@@ -4,7 +4,7 @@
 
 int main(int argc, char *argv[])
 {
-    // argv: tipo / port / tentativas / timeou/ [ficheiro / framesize]
+    // ./rcom <type> <port> <tries> <timeout> <framesize> <filename>
 
     if(argc < 7) {
         printf("ARGUMENTS ERROR\n./rcom <type> <port> <tries> <timeout> <framesize> <filename>\n");
@@ -18,14 +18,14 @@ int main(int argc, char *argv[])
 
     if (strcmp(argv[1], "transmitter") == 0) {
 
-        printf("*Transmitter*\n");
+        printf("<Transmitter>\n");
 
 
         if (argc == 7) {
             strcpy(appData.filename,argv[6]);
             appData.dataSize = atoi(argv[5]);
         } else if(argc != 7) {
-            printf("ARGUMENTS ERROR\n./rcom type port tries timeout baundrate [file framesize]\n");
+            printf("Wrong Arguments\n");
             return -1;
         }
 
@@ -33,17 +33,17 @@ int main(int argc, char *argv[])
 
     } else if(strcmp(argv[1], "receiver") == 0) {
 
-        if(argc < 7) {
-            printf("ARGUMENTS ERROR\nfilename is required\n");
+        if(argc != 7) {
+            printf("Wrong Arguments\n");
             return -1;
         }
-        printf("*Receiver*\n");
+        printf("<Receiver>\n");
         strcpy(appData.filename,argv[6]);
         appData.dataSize = atoi(argv[5]);
         receiver();
 
     } else {
-        printf("ARGUMENTS ERROR\ntype should be 'receiver' or 'transmitter'\n");
+        printf("Type should be 'receiver' or 'transmitter'\n");
         return -1;
     }
 
