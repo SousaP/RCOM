@@ -1,6 +1,18 @@
 <<<<<<< HEAD
 #include "linkLayer.h"
 
+void resendFrame_alarm(int signo) {
+    if(linkLayer.numFailedTransmissions >= linkLayer.numTransmissions) {
+        printf("ERROR: Timeout\n");
+        llclose(linkLayer.fileDescriptor);
+        exit(0);
+    }
+    linkLayer.numFailedTransmissions++;
+
+    write(linkLayer.fileDescriptor, linkLayer.frame, linkLayer.frameSize);
+    alarm(linkLayer.timeout);
+}
+
 /*
 *@param Data to be sent
 *@param Data size
@@ -40,11 +52,11 @@ int createInformationFrame(char* data, size_t dataSize, char* frame) {
 *@ret int 0 -> Frame configured
 */
 int createSupervisionFrame(char* frame, char A, char C) {
-	frame[0] = F;
+	frame[0] = FLAG;
 	frame[1] = A;
 	frame[2] = C;
-	frame[3] = BCC1;
-	frame[4] = F;
+	frame[3] = A^C;
+	frame[4] = FLAG;
 
 	return 0;
 }
@@ -144,8 +156,10 @@ int byteDestuffing(char* stuff, int stuffSize, char* data) {
 	return stuffITR;
 }
 
-int llopen(){
+int initialize(){
     
+    signal(SIGALRM,resendFrame_alarm);
+
 	linkLayer.fileDescriptor = open(linkLayer.port, O_RDWR | O_NOCTTY );
     if (linkLayer.fileDescriptor < 0) {
         perror(linkLayer.port); 
@@ -166,5 +180,172 @@ int llopen(){
     newtio.c_lflag = 0;
 
     newtio.c_cc[VTIME]    = 0;  
-    newtio.c_cc[VMIN]     = 1;  
+    newtio.c_cc[VMIN]     = 1;
+
+    char UA[5];
+    createSupervisionFrame(UA,FRAME_A_T,FRAME_C_UA);
+
+    char SET[5];
+    createSupervisionFrame(SET,FRAME_A_T,FRAME_C_SET);
+
+    if(status == TRANSMITTER){
+    	memcpy(&linkLayer.frame[0], &SET[0], 5);
+    	linkLayer.frameSize = 5;
+        linkLayer.numFailedTransmissions = 0;
+
+        resendFrame_alarm(0);
+        validator(UA, 5);
+
+
+        alarm(0);
+
+    }
+
+    else if(status == RECEIVER){
+        write(linkLayer.fileDescriptor, UA, sizeof(UA));
+
+    }
+    return linkLayer.fileDescriptor;
+}
+
+void validator(unsigned char* frame, int frameSize) {
+
+    if (frameSize <= 0)
+        return;
+
+    int STOP = FALSE;
+    int framePos = -1;
+    int tries = 0;
+
+
+    while(STOP == FALSE) {
+        char tmp[2];
+        read(linkData.fileDescriptor, tmp, 1);
+
+
+
+        if (frame[framePos+1] == tmp[0]) {
+            framePos++;
+        } else if (frame[0] == tmp[0]) {
+            framePos = 0;
+            tries++;
+        } else {
+            framePos = -1;
+            tries++;
+        }
+
+        if (framePos == frameSize-1) {
+            STOP = TRUE;            
+        }
+    }
+}
+
+int llclose() {
+
+    printf("Close\n");
+    tcflush(linkLayer.fileDescriptor, TCOFLUSH);
+
+    if ( tcsetattr(linkLayer.fileDescriptor, TCSANOW, &oldtio) == -1) {
+      perror("tcsetattr");
+      exit(-1);
+  }
+
+  close(linkLayer.fileDescriptor);
+}
+
+int lldisc(int mode) {
+
+	if(mode == TRANSMITTER){
+		char discS[5];
+
+		createSupervisionFrame(discS,FRAME_A_T,LFC_C_DISC);
+		memcpy(&linkLayer.frame[0], &discS[0], 5);
+    	linkData.frameSize = 5;
+    	linkData.numFailedTransmissions = 0;
+
+   	 	resendFrame_alarm(0);
+
+   	 	char discR[5];
+    	createSupervisionFrame(discR,FRAME_A_T,LFC_C_DISC);
+
+    	validator(discReceived, 5);
+
+    	alarm(0);
+
+    	char UA[5];
+    	createSupervisionFrame(UA,FRAME_A_T,FRAME_C_UA);
+		memcpy(&linkLayer.frame[0], &UA[0], 5);
+    	linkData.frameSize = 5;
+    	linkData.numFailedTransmissions = 0;
+
+   		resendFrame_alarm(0);
+        validator(UA, 5);
+
+
+        alarm(0);
+
+   		sleep(2);
+	}
+	if(mode == RECEIVER){
+		char discR[5];
+    	createSupervisionFrame(discR,FRAME_A_T,LFC_C_DISC);
+
+    	validator(discReceived, 5);
+
+    	alarm(0);
+
+    	char discS[5];
+
+		createSupervisionFrame(discS,FRAME_A_T,LFC_C_DISC);
+		memcpy(&linkLayer.frame[0], &discS[0], 5);
+    	linkData.frameSize = 5;
+    	linkData.numFailedTransmissions = 0;
+
+   	 	resendFrame_alarm(0);
+	}
+
+}
+
+int waitResponse() {
+    int pos = 0;
+    int action = 0;
+    char rf[2];
+    while(TRUE) {
+        char tmp[2];
+        read(linkLayer.fileDescriptor, tmp, 1);
+
+    
+
+        if(pos == 0 && tmp[0] == LFC_FLAG) {
+            pos++;
+        } else if(pos == 1 && tmp[0] == LFC_A_T) {
+            rf[0] = tmp[0];
+            pos++;            
+        } else if(pos == 2 && linkLayer.sequenceNumber == 0 && tmp[0] == FRAME_C_RR1) {
+            rf[1] = tmp[0];
+            action = 0;
+            pos++;
+        } else if(pos == 2 && linkLayer.sequenceNumber == 1 && tmp[0] == FRAME_C_RR0) {
+            rf[1] = tmp[0];
+            action = 0;
+            pos++;
+        } else if(pos == 2 && linkLayer.sequenceNumber == 0 && tmp[0] == FRAME_C_REJ1) {
+            rf[1] = tmp[0];
+            action = 1;
+            pos++;
+        } else if(pos == 2 && linkLayer.sequenceNumber == 1 && tmp[0] == FRAME_C_REJ0) {
+            rf[1] = tmp[0];
+            action = 1;
+            pos++;
+        } else if(pos == 3 && tmp[0] == rf[0]^rf[1]) {
+            pos++;
+        } else if(pos == 4 && tmp[0] == FLAG) {
+            break;
+        } else if(tmp[0] == FLAG) {
+            pos = 1;
+        } else {
+            pos = 0;
+        }
+    }
+    return action;
 }
