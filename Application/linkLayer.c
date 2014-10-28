@@ -88,6 +88,13 @@ int bccChecker(char* frame, size_t size) {
 
 }
 
+/*
+*@param buffer
+*@param count
+*@ret int -2->Error in BCC2
+*     -1->Error in BCC1
+*     0->Correct BCC
+*/
 unsigned short checksum(unsigned short *buffer, int count) {
 	register unsigned short sum = 0;
 	while(count--) {
@@ -100,6 +107,13 @@ unsigned short checksum(unsigned short *buffer, int count) {
 	return ~(sum & 0xFFFF);
 }
 
+
+/*
+*@param data
+*@param dataSize
+*@param stuff
+*@ret iterador do stuffing
+*/
 int byteStuffing(char* data, int dataSize, char* stuff) {
 	int i = 0;
 	int stuffITR = 0;
@@ -127,6 +141,13 @@ int byteStuffing(char* data, int dataSize, char* stuff) {
 	return stuffITR;
 }
 
+
+/*
+*@param stuff
+*@param stuffSize
+*@param data
+*@ret iterador do stuffing
+*/
 int byteDestuffing(char* stuff, int stuffSize, char* data) {
 	int i = 0;
 	int stuffITR = 0;
@@ -156,14 +177,18 @@ int byteDestuffing(char* stuff, int stuffSize, char* data) {
 	return stuffITR;
 }
 
+
+/*
+*@ret fd do file da port
+*/
 int initialize(){
-    
+
     signal(SIGALRM,resendFrame_alarm);
 
 	linkLayer.fileDescriptor = open(linkLayer.port, O_RDWR | O_NOCTTY );
     if (linkLayer.fileDescriptor < 0) {
-        perror(linkLayer.port); 
-        exit(-1); 
+        perror(linkLayer.port);
+        exit(-1);
     }
 
 
@@ -179,7 +204,7 @@ int initialize(){
 
     newtio.c_lflag = 0;
 
-    newtio.c_cc[VTIME]    = 0;  
+    newtio.c_cc[VTIME]    = 0;
     newtio.c_cc[VMIN]     = 1;
 
     char UA[5];
@@ -208,6 +233,11 @@ int initialize(){
     return linkLayer.fileDescriptor;
 }
 
+
+/*
+*@param frame
+*@param frameSize
+*/
 void validator(unsigned char* frame, int frameSize) {
 
     if (frameSize <= 0)
@@ -235,11 +265,15 @@ void validator(unsigned char* frame, int frameSize) {
         }
 
         if (framePos == frameSize-1) {
-            STOP = TRUE;            
+            STOP = TRUE;
         }
     }
 }
 
+
+/*
+Close port
+*/
 int llclose() {
 
     printf("Close\n");
@@ -252,6 +286,8 @@ int llclose() {
 
   close(linkLayer.fileDescriptor);
 }
+
+
 
 int lldisc(int mode) {
 
@@ -306,6 +342,9 @@ int lldisc(int mode) {
 
 }
 
+/*
+Wait for response
+*/
 int waitResponse() {
     int pos = 0;
     int action = 0;
@@ -314,13 +353,13 @@ int waitResponse() {
         char tmp[2];
         read(linkLayer.fileDescriptor, tmp, 1);
 
-    
+
 
         if(pos == 0 && tmp[0] == LFC_FLAG) {
             pos++;
         } else if(pos == 1 && tmp[0] == LFC_A_T) {
             rf[0] = tmp[0];
-            pos++;            
+            pos++;
         } else if(pos == 2 && linkLayer.sequenceNumber == 0 && tmp[0] == FRAME_C_RR1) {
             rf[1] = tmp[0];
             action = 0;
