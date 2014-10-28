@@ -33,7 +33,8 @@ int createDataPacket(char* packet, int seqNumber, int length, char* data) {
 *@ret int -> Total packet size
 */
 
-int createControlPacket(char* packet, char control, char T1, char L1, char* V1, char T2, char L2, char* V2) {
+int createControlPacket(char* packet, char control, char T1, char L1, char* V1, 
+	char T2, char L2, char* V2, char T3, char L3, char* V3) {
 	packet[0] = control;
 	packet[1] = T1;
 	packet[2] = L1;
@@ -50,7 +51,14 @@ int createControlPacket(char* packet, char control, char T1, char L1, char* V1, 
 		packet[5 + L1] = V2[i];
 	}
 
-	return (5 + L1 + L2);
+	packet[5 + L2] = T3;
+	packet[6 + L2] = L3;
+
+	for(i = 0; i < L3; i++) {
+		packet[7 + L2] = V3[i];
+	}
+
+	return (7 + L1 + L2 + L3);
 }
 
 /*

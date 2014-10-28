@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 #include "linkLayer.h"
 
 void resendFrame_alarm(int signo) {
@@ -177,17 +176,8 @@ int byteDestuffing(char* stuff, int stuffSize, char* data) {
 	return stuffITR;
 }
 
-<<<<<<< HEAD
 int llopen(){
-    
-=======
 
-/*
-*@ret fd do file da port
-*/
-int initialize(){
-
->>>>>>> origin/master
     signal(SIGALRM,resendFrame_alarm);
 
 	linkLayer.fileDescriptor = open(linkLayer.port, O_RDWR | O_NOCTTY );
@@ -391,7 +381,7 @@ int waitResponse() {
 void sendREJ(int mode) {
 	char C;
     if(mode == RECEIVER) {
-        C = FRAME_C_REJ1;        
+        C = FRAME_C_REJ1;
     } else {
         C = FRAME_C_REJ0;
     }
@@ -406,7 +396,6 @@ void sendREJ(int mode) {
 int llwrite(unsigned char * buffer, int length) {
     
     char uFrame[STUFF_MAX_SIZE];
-
     int xor = 0;
     int i;
     for(i = 0; i < length; i++) {
@@ -420,7 +409,7 @@ int llwrite(unsigned char * buffer, int length) {
         uFrame[2] = FRAME_C_I0;
     else
         uFrame[2] = FRAME_C_I1;
-    
+  
     uFrame[3] = uFrame[1]^uFrame[2];
 
     memcpy(&uFrame[4], &buffer[0], length);
