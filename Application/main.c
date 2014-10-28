@@ -6,8 +6,8 @@ int main(int argc, char *argv[])
 {
     // argv: tipo / port / tentativas / timeou/ [ficheiro / framesize]
 
-    if(argc < 6) {
-        printf("ARGUMENTS ERROR\n./rcom <type> <port> <tries> <timeout> <framesize>\n");
+    if(argc < 7) {
+        printf("ARGUMENTS ERROR\n./rcom <type> <port> <tries> <timeout> <framesize> <filename>\n");
         return -1;
     }
 
@@ -21,10 +21,10 @@ int main(int argc, char *argv[])
         printf("*Transmitter*\n");
 
 
-        if (argc == 8) {
+        if (argc == 7) {
             strcpy(appData.filename,argv[6]);
-            appData.dataSize = atoi(argv[7]);
-        } else if(argc != 6) {
+            appData.dataSize = atoi(argv[5]);
+        } else if(argc != 7) {
             printf("ARGUMENTS ERROR\n./rcom type port tries timeout baundrate [file framesize]\n");
             return -1;
         }
@@ -39,8 +39,7 @@ int main(int argc, char *argv[])
         }
         printf("*Receiver*\n");
         strcpy(appData.filename,argv[6]);
-        if(argc > 7)
-            appData.dataSize = atoi(argv[7]);
+        appData.dataSize = atoi(argv[5]);
         receiver();
 
     } else {
