@@ -1,25 +1,18 @@
 #ifndef APPLAYER_H
 #define APPLAYER_H
 
-#include "appTypes.h"
+#include "types.h"
 
-
-int fileDescriptor; /*Descritor correspondente à porta série*/
-int status; /*Mode da AppLayer*/
-struct stat st; /*Struct do ficheiro*/
-
-int main(int argc, char* argv[]);
+struct appicationLayer appLayer;
 
 int create_file( char* filename);
 int open_file(char* filename);
 void close_file(int fd);
 
+int teceiver();
+int transmitter();
 
-int Receiver();
-int Transmissor();
-
-
-int llopen (int port, char *dev);
-int llclose (int port);
+int read();
+int write();
 
 #endif

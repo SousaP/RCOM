@@ -1,6 +1,9 @@
 #include "appLayer.h"
 
-int create_file( char* filename){
+int numSeq;
+int size;
+
+int create_file(char* filename){
   //retorna o fd do ficheiro que cria
   printf("\nCreating file %s", filename);
   return open(filename, O_WRONLY | O_CREAT | O_APPEND | O_TRUNC, 0744);
@@ -21,19 +24,37 @@ int open_file(char* filename){
   return file_fd;
 }
 
-int llopen (int port, char *dev){
+int receiver(){
+  int sizeR = 0;
+  create_file(appLayer.filename);
+  appLayer.fileDescriptor = llopen(RECEIVER);
+  appLayer.sequenceNumber = -1;
+
+  int receivedFrames = 0;
+  int badFrames = 0;
+  int n = 0;
+  char buffer[MAX_FRAME_SIZE - 6];
+  char writeBUF[MAX_FRAME_SIZE - 6];
+
+  while(1) {
+    
+  }
+
+}
+int transmitter(){
+  numSeq = 0;
+  appLayer.fileDescriptor = llopen(TRANSMITTER);
+
+  write();
+
+  lldisc();
+}
+
+int read() {
 
 }
 
-int llclose (int port){
-
-}
-
-
-int Receiver(){
-
-}
-int Transmissor(){
+int write() {
 
 }
 

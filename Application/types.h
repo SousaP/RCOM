@@ -32,7 +32,7 @@
 
 // LINK
 
-#define MAX_SIZE 512 // Frame max size
+#define MAX_FRAME_SIZE 512 // Frame max size
 #define STUFF_MAX_SIZE MAX_SIZE*2 // Stuff frame max size
 
 // STUFFING
