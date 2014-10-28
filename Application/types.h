@@ -29,6 +29,9 @@
 #define P_CONTROL_START 2
 #define P_CONTROL_END 3
 #define P_N       255
+#define P_T_SIZE 0
+#define P_T_NAME 1
+#define P_T_SHA1 2
 
 // LINK
 

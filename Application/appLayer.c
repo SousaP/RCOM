@@ -1,4 +1,5 @@
 #include "appLayer.h"
+#include <openssl/sha.h>
 
 int numSeq;
 int size;
@@ -37,7 +38,57 @@ int receiver(){
   char writeBUF[MAX_FRAME_SIZE - 6];
 
   while(1) {
-    
+    int bufferSize = llread(buffer, MAX_FRAME_SIZE - 6);
+
+    if(bufferSize < -1) {
+      badFrames++;
+    }
+    else if(bufferSize == -1) {
+      break;
+    }
+    else {
+      if(buffer[0] == 0) {
+        receivedFrames++;
+      }
+    }
+
+    if(buffer[0] == P_CONTROL_START) {
+      printf("Transmition started.......\n");
+
+      int sizeTemp = (int) buffer[2];
+
+      char sizeC[100];
+      memcpy(&sizeC[0], &buffer[3], sizeTemp);
+      size = atoi(&sizechar[0]);
+    }
+    else if(buffer[0] == P_CONTROL_END) {
+      printf("Transmition ended!\n");
+      if(buffer[1] == P_T_SHA1) {
+        int fileR = openFile(appLayer.filename);
+        char *data = (char*) malloc(sizeR + 5);
+
+       if(read(fileR, data, sizeR) != -1) {
+          unsigned char hash[512];
+          SHA1(data, sizeR+5, hash);
+
+          int i;
+          for(i = 0; i <= buffer[2]; i++) {
+            if(i == buffer[2]) {
+              printf("SHA1 Checksum OK!\n");
+              break;
+            }
+            if(hash[i] != buffer[i+3]) {
+              printf("SHA1 Checksum Error!\n");
+              break;
+            }
+          }
+          continue;
+        }
+      }
+    }
+    else {
+
+    }
   }
 
 }
