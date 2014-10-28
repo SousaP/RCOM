@@ -156,7 +156,7 @@ int byteDestuffing(char* stuff, int stuffSize, char* data) {
 	return stuffITR;
 }
 
-int initialize(){
+int llopen(){
     
     signal(SIGALRM,resendFrame_alarm);
 
@@ -242,19 +242,6 @@ void validator(unsigned char* frame, int frameSize) {
 
 int llclose() {
 
-    printf("Close\n");
-    tcflush(linkLayer.fileDescriptor, TCOFLUSH);
-
-    if ( tcsetattr(linkLayer.fileDescriptor, TCSANOW, &oldtio) == -1) {
-      perror("tcsetattr");
-      exit(-1);
-  }
-
-  close(linkLayer.fileDescriptor);
-}
-
-int lldisc(int mode) {
-
 	if(mode == TRANSMITTER){
 		char discS[5];
 
@@ -304,6 +291,15 @@ int lldisc(int mode) {
    	 	resendFrame_alarm(0);
 	}
 
+    printf("Close\n");
+    tcflush(linkLayer.fileDescriptor, TCOFLUSH);
+
+    if ( tcsetattr(linkLayer.fileDescriptor, TCSANOW, &oldtio) == -1) {
+      perror("tcsetattr");
+      exit(-1);
+  	}
+
+  	close(linkLayer.fileDescriptor);
 }
 
 int waitResponse() {
@@ -348,4 +344,70 @@ int waitResponse() {
         }
     }
     return action;
+}
+
+void sendREJ(int mode) {
+	char C;
+    if(mode == RECEIVER) {
+        C = FRAME_C_REJ1;        
+    } else {
+        C = FRAME_C_REJ0;
+    }
+
+    char rej[5];
+	createSupervisionFrame(rej,FRAME_A_T,C);
+    write(linkData.fileDescriptor, rej, 5);
+
+    printf("Sent REJ\n");
+}
+
+int llwrite(unsigned char * buffer, int length) {
+    
+    char uFrame[MAX_FRAME_SIZE];
+
+    int xor = 0;
+    int i;
+    for(i = 0; i < length; i++) {
+        xor ^= buffer[i];
+    }
+
+    uFrame[0] = LFC_FLAG;
+    uFrame[1] = LFC_A_T;
+
+    if(linkData.sequenceNumber == 0)
+        uFrame[2] = LFC_C_I0;
+    else
+        uFrame[2] = LFC_C_I1;
+    
+    uFrame[3] = uFrame[1]^uFrame[2];
+
+    memcpy(&uFrame[4], &buffer[0], length);
+
+    uFrame[4+length] = xor;
+    uFrame[4+length+1] = LFC_FLAG;
+
+    linkData.frameSize = stuffing(uFrame, 4+length+2, linkData.frame);
+
+    linkData.numFailedTransmissions = 0;
+    resendFrame_alarm(0);
+
+    while(TRUE) {
+        int action = waitResponse();
+
+        if(action == 0) {
+            alarm(0);
+            break;
+
+        } else {
+            alarm(0);
+            resendFrame_alarm(0);
+        }
+    }
+
+    if(linkData.sequenceNumber == 0)
+        linkData.sequenceNumber = 1;
+    else
+        linkData.sequenceNumber = 0;
+
+    return length + 6;
 }
