@@ -27,7 +27,7 @@ int open_file(char* filename){
 
 int receiver(){
   int sizeR = 0;
-  create_file(appLayer.filename);
+  int fileW = create_file(appLayer.filename);
   appLayer.fileDescriptor = llopen(RECEIVER);
   appLayer.sequenceNumber = -1;
 
@@ -38,7 +38,7 @@ int receiver(){
   char writeBUF[MAX_FRAME_SIZE - 6];
 
   while(1) {
-    
+
     int bufferSize = llread(buffer, MAX_FRAME_SIZE - 6);
 
     if(bufferSize < -1) {
@@ -69,8 +69,8 @@ int receiver(){
         char *data = (char*) malloc(sizeR + 5);
 
        if(read(fileR, data, sizeR) != -1) {
-          unsigned char hash[512];
-          SHA1(data, sizeR+5, hash);
+          unsigned char hash[256];
+          SHA1(data, sizeR, hash);
 
           int i;
           for(i = 0; i <= buffer[2]; i++) {
@@ -88,7 +88,23 @@ int receiver(){
       }
     }
     else {
+      if(bufferSize > 4) {
+        if((appLayer.sequenceNumber + 1)%128 != buffer[1]) {
+          printf("Error in sequence number\n");
+          continue;
+        }
+        appLayer.sequenceNumber++;
 
+        int i;
+        for(i = 4; i < bufferSize; i++) {
+          writeBUF[i-4] = buffer[i];
+        }
+
+        write(fileR, writeBUF, bufferSize - 4);
+
+        sizeR += bufferSize - 4;
+        n++;
+      }
     }
   }
 }
