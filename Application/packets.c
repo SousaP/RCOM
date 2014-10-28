@@ -9,7 +9,7 @@
 */
 int createDataPacket(char* packet, int seqNumber, int length, char* data) {
 	packet[0] = P_CONTROL_DATA;
-	packet[1] = seqNumber % 128;
+	packet[1] = seqNumber % 255;
 	packet[2] = length / 256;
 	packet[3] = length % 256;
 
