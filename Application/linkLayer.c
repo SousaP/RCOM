@@ -405,7 +405,7 @@ void sendREJ(int mode) {
 
 int llwrite(unsigned char * buffer, int length) {
     
-    char uFrame[MAX_FRAME_SIZE];
+    char uFrame[STUFF_MAX_SIZE];
 
     int xor = 0;
     int i;
@@ -413,22 +413,22 @@ int llwrite(unsigned char * buffer, int length) {
         xor ^= buffer[i];
     }
 
-    uFrame[0] = LFC_FLAG;
-    uFrame[1] = LFC_A_T;
+    uFrame[0] = FLAG;
+    uFrame[1] = FRAME_A_T ;
 
-    if(linkData.sequenceNumber == 0)
-        uFrame[2] = LFC_C_I0;
+    if(linkLayer.sequenceNumber == 0)
+        uFrame[2] = FRAME_C_I0;
     else
-        uFrame[2] = LFC_C_I1;
+        uFrame[2] = FRAME_C_I1;
     
     uFrame[3] = uFrame[1]^uFrame[2];
 
     memcpy(&uFrame[4], &buffer[0], length);
 
     uFrame[4+length] = xor;
-    uFrame[4+length+1] = LFC_FLAG;
+    uFrame[4+length+1] = FLAG;
 
-    linkData.frameSize = stuffing(uFrame, 4+length+2, linkData.frame);
+    linkData.frameSize = byteStuffing(uFrame, 4+length+2, linkLayer.frame);
 
     linkData.numFailedTransmissions = 0;
     resendFrame_alarm(0);
@@ -446,10 +446,10 @@ int llwrite(unsigned char * buffer, int length) {
         }
     }
 
-    if(linkData.sequenceNumber == 0)
-        linkData.sequenceNumber = 1;
+    if(linkLayer.sequenceNumber == 0)
+        linkLayer.sequenceNumber = 1;
     else
-        linkData.sequenceNumber = 0;
+        linkLayer.sequenceNumber = 0;
 
     return length + 6;
 }
