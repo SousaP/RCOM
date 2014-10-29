@@ -38,7 +38,7 @@ int createControlStartPacket(char* packet, char* filename, char size) {
 	sprintf(&packet[3], "%d", size);
 	packet[0] = P_CONTROL_START;
 	packet[1] = P_T_SIZE;
-	packet[2] = strlen(packet[3]);
+	packet[2] = strlen(&packet[3]);
 	packet[3 + (int) packet[2]] = P_T_NAME;
 	packet[4 + (int) packet[2]] = strlen(filename);
 	sprintf(&packet[5 + (int)packet[2]], "%s", filename);
