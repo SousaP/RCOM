@@ -5,7 +5,7 @@
 
 struct termios oldtio, newtio;
 
-struct linkLayer linkLayer;
+struct linkLayer l_Layer;
 
 int llopen(int type); //type = RECEIVER | TRANSMITTER
 
