@@ -1,4 +1,4 @@
-#include "app.h"  
+#include "appLayer.h"
 
 #include <openssl/md5.h>  
 
@@ -7,31 +7,31 @@ int sequencenumber;
 
 void transmitter() {
     sequencenumber = 0;
-    appData.fileDescriptor = llopen(TRANSMITTER);
+    appLayer.fileDescriptor = llopen(TRANSMITTER);
     
-    sendFile();
+    appWrite();
     
     lldisc();
 }
 
 void receiver() {
     int sizeReceived = 0;
-    int filewriter = open(appData.filename,O_CREAT | O_WRONLY);
-    appData.fileDescriptor = llopen(RECEIVER);
-    appData.sequenceNumber = -1;
+    int filewriter = open(appLayer.filename,O_CREAT | O_WRONLY);
+    appLayer.fileDescriptor = llopen(RECEIVER);
+    appLayer.sequenceNumber = -1;
 
     int receivedFrames = 0;
     int failedFrames = 0;
     int n = 0;
-    char buffer[MAX_SIZE-6];
-    char towrite[MAX_SIZE-6];
+    char buffer[MAX_FRAME_SIZE-6];
+    char towrite[MAX_FRAME_SIZE-6];
 
     while(TRUE) {
-        int tamanhobuffer = llread(buffer, MAX_SIZE-6);
+        int bufferS = llread(buffer, MAX_FRAME_SIZE-6);
 
-        if(tamanhobuffer == -1){
+        if(bufferS == -1){
             break;
-        } else if(tamanhobuffer < -1){
+        } else if(bufferS < -1){
             failedFrames++;
         } else {            
             if(buffer[0] == 0){
@@ -39,7 +39,7 @@ void receiver() {
             }
         }
 
-        if(buffer[0]==AFC_C_START)
+        if(buffer[0]==P_CONTROL_START)
         {
             printf("Start Transmission\n");
 
@@ -51,13 +51,13 @@ void receiver() {
             size = atoi(&sizechar[0]);
             
         }
-        else if(buffer[0]==AFC_C_END)
+        else if(buffer[0]==P_CONTROL_END)
         {
             printf("End Transmission\n");
-            if(buffer[1] == AFC_T_MD5) {
+            if(buffer[1] == P_T_SHA1) {
 
                 char * datacontent = (char *)malloc(sizeReceived + 5);
-                int filereader = open(appData.filename,O_RDONLY);
+                int filereader = open(appLayer.filename,O_RDONLY);
                 if(read(filereader,datacontent,sizeReceived) != -1) {
 
                     char md5sum[16];
@@ -83,17 +83,17 @@ void receiver() {
         }
         else
         {
-            if(tamanhobuffer > 4) {
+            if(bufferS > 4) {
 
                 
-                if((appData.sequenceNumber+1)%128 != buffer[1]) {
+                if((appLayer.sequenceNumber+1)%128 != buffer[1]) {
                     printf("ERROR: App Sequence Number");
                     continue;
                 }
 
-                appData.sequenceNumber++;
+                appLayer.sequenceNumber++;
 
-                int lengthtowrite = deleteDataFlags(towrite,buffer,tamanhobuffer);
+                int lengthtowrite = deleteDataFlags(towrite,buffer,bufferS);
                 
                 write(filewriter,towrite,lengthtowrite);
 
@@ -112,21 +112,21 @@ void receiver() {
     printf("%d received in total. %d successful frames received!\n", receivedFrames, receivedFrames - failedFrames);
 }
 
-void sendFile() {
+void appWrite() {
 
     
     struct stat st;
-    stat(appData.filename, &st);
+    stat(appLayer.filename, &st);
     size = st.st_size;
 
     
-    char bufferstart[MAX_SIZE-6];
+    char bufferstart[MAX_FRAME_SIZE-6];
     int result = createStart(bufferstart);
     llwrite(bufferstart,result);
 
     
     char * datacontent = (char *)malloc(size + 5);
-    int filewriter = open(appData.filename,O_RDONLY);
+    int filewriter = open(appLayer.filename,O_RDONLY);
     if(read(filewriter,datacontent,size) == -1) {
         printf("ERROR: Open File\n");
         llclose();
@@ -138,13 +138,13 @@ void sendFile() {
 
     
     int i;
-    char data[MAX_SIZE-6];
-    char aux[MAX_SIZE-6];
+    char data[MAX_FRAME_SIZE-6];
+    char aux[MAX_FRAME_SIZE-6];
     int sentFrames = 0;
-    for(i = 0; i < (int)size/appData.dataSize; i++) {
+    for(i = 0; i < (int)size/appLayer.dataSize; i++) {
 
-        memcpy(&data[0], &datacontent[i*appData.dataSize], appData.dataSize);
-        int framesize = createDataFrame(aux,data,appData.dataSize);
+        memcpy(&data[0], &datacontent[i*appLayer.dataSize], appLayer.dataSize);
+        int framesize = createDataFrame(aux,data,appLayer.dataSize);
 
 
         llwrite(aux,framesize);      
@@ -152,9 +152,9 @@ void sendFile() {
     }
 
     
-    if(i * appData.dataSize < size) {
-        memcpy(&data[0], &datacontent[i*appData.dataSize], size - i * appData.dataSize);
-        int framesize = createDataFrame(aux, data, size - i * appData.dataSize);
+    if(i * appLayer.dataSize < size) {
+        memcpy(&data[0], &datacontent[i*appLayer.dataSize], size - i * appLayer.dataSize);
+        int framesize = createDataFrame(aux, data, size - i * appLayer.dataSize);
         llwrite(aux,framesize);      
         sentFrames++;
     }
@@ -162,7 +162,7 @@ void sendFile() {
     printf("%d packets sent!\n", sentFrames);
 
 
-    char bufferend[MAX_SIZE-6];
+    char bufferend[MAX_FRAME_SIZE-6];
     result = createEnd(bufferend, md5sum);
     llwrite(bufferend,result);
 
@@ -182,15 +182,14 @@ int deleteDataFlags(char* aux,char* data, int dataSize) {
 
 
 int createDataFrame(char* aux, char* data, int dataSize) {
-    aux[0]=AFC_C_DATA;
+    aux[0]=P_CONTROL_DATA;
     aux[1]=sequencenumber%128;
     aux[2]=(dataSize/256);
     aux[3]=dataSize%256;
 
    
     int i;
-    for(i=0;i<dataSize;i++)
-    {
+    for(i=0;i<dataSize;i++) {
         aux[i+4] = data[i];
         
     }
@@ -203,26 +202,24 @@ int createDataFrame(char* aux, char* data, int dataSize) {
 
 int createStart(char* aux) {
     
-    aux[0] = AFC_C_START;
+    aux[0] = P_CONTROL_START;
     
-    
-
-    aux[1] = AFC_T_SIZE;
+    aux[1] = P_T_SIZE;
     sprintf(&aux[3],"%d",size);
     aux[2] = strlen(&aux[3]);
 
 
-    aux[3+(int)aux[2]] = AFC_T_NAME;
-    aux[3+(int)aux[2]+1] = strlen(appData.filename);
-    sprintf(&aux[3+(int)aux[2]+2], "%s", appData.filename);
+    aux[3+(int)aux[2]] = P_T_NAME;
+    aux[3+(int)aux[2]+1] = strlen(appLayer.filename);
+    sprintf(&aux[3+(int)aux[2]+2], "%s", appLayer.filename);
 
-    return 3 + ((int)aux[2]) + 1 + strlen(appData.filename);
+    return 3 + ((int)aux[2]) + 1 + strlen(appLayer.filename);
 }
 
 int createEnd(char* aux, char* md5) {
 
-    aux[0] = AFC_C_END;
-    aux[1] = AFC_T_MD5;
+    aux[0] = P_CONTROL_END;
+    aux[1] = P_T_SHA1;
     aux[2] = 16;
     int i;
     for(i = 0; i < 16; i++)

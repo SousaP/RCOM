@@ -3,15 +3,13 @@
 
 #include "types.h"
 
-struct applicationLayer appData;
+struct applicationLayer appLayer;
 
 void transmitter();
 
 void receiver();
 
-void receiveFile();
-
-void sendFile();
+void appWrite();
 
 int createDataFrame(char* aux, char* data, int framesize); //retorna o novo tamanho
 
