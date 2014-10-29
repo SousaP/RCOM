@@ -1,6 +1,6 @@
 #include "appLayer.h"
 #include "packets.h"
-#include <openssl/sha.h>
+//#include <openssl/sha.h>
 
 int numSeq;
 int size;
@@ -57,7 +57,7 @@ int receiver(){
 
       char sizeC[100];
       memcpy(&sizeC[0], &buffer[3], sizeT);
-      size = atoi(&sizechar[0]);
+      size = atoi(&sizeC[0]); // estava (&sizechar[0]); pos oque esta agora
     }
     else if(buffer[0] == P_CONTROL_END) {
       printf("Transmition ended!\n");
@@ -97,7 +97,7 @@ int receiver(){
           writeBUF[i-4] = buffer[i];
         }
 
-        write(fileR, writeBUF, bufferSize - 4);
+        write(fileW, writeBUF, bufferSize - 4); // estava fileR que nao estava definido
 
         sizeR += bufferSize - 4;
         n++;
@@ -112,14 +112,14 @@ int transmitter() {
   numSeq = 0;
   appLayer.fileDescriptor = llopen(TRANSMITTER);
 
-  write();
+  appWrite();
 
   lldisc();
 
   return 0;
 }
 
-int write() {
+int appWrite() {
   stat(appLayer.filename, &st);
   size = st.st_size;
 
@@ -137,21 +137,22 @@ int write() {
   }
 
   unsigned char hash[256];
-  SHA1(data, size, hash);
+  SHA1(dataP, size, hash); // estava so data
 
   char data[MAX_FRAME_SIZE-6];
   char packetAux[MAX_FRAME_SIZE-6];
   int framesSent = 0;
+  int i;
   for(i = 0; i < (int) size/appLayer.dataSize; i++) {
     memcpy(&data[0], &dataP[i*appLayer.dataSize], appLayer.dataSize);
-    int frameSize = createDataPacket(packetAux, sequenceNumber, appLayer.dataSize, data);
+    int frameSize = createDataPacket(packetAux, numSeq, appLayer.dataSize, data); // estava sequenceNumber
     llwrite(packetAux, frameSize);
     framesSent++;
   }
 
   if(i * appLayer.dataSize < size) {
     memcpy(&data[0], &dataP[i*appLayer.dataSize], size - i *appLayer.dataSize);
-    int frameSize = createDataPacket(packetAux, sequenceNumber, size - i * appLayer.dataSize, data);
+    int frameSize = createDataPacket(packetAux, numSeq, size - i * appLayer.dataSize, data);// estava sequenceNumber
     llwrite(packetAux, frameSize);
     framesSent++;
   }

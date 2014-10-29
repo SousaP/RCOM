@@ -4,7 +4,7 @@
 #include "types.h"
 
 struct stat st;
-struct appicationLayer appLayer;
+struct applicationLayer appLayer;
 
 int createFile( char* filename);
 int openFile(char* filename);
@@ -12,6 +12,6 @@ int openFile(char* filename);
 int receiver();
 int transmitter();
 
-int write();
+int appWrite();
 
 #endif

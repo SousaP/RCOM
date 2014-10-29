@@ -2,7 +2,7 @@ CC=gcc
 CFLAGS= -c -g -Wall
 LDFLAGS=
 SOURCES= appLayer.c linkLayer.c main.c packets.c
-HEADERS= appLayer.h linkLayer.h types.h 
+HEADERS= appLayer.h linkLayer.h types.h packets.h
 OBJECTS=$(SOURCES:.c=.o)
 EXECUTABLE=program
 

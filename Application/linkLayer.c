@@ -22,10 +22,10 @@ int createInformationFrame(char* data, size_t dataSize, char* frame) {
 
 	char* stuffInfo = (char*)malloc(sizeof(char)*MAX_SIZE);
 
-	frame[0] = F;
-	frame[1] = A;
-	frame[2] = C_SETUP;
-	frame[3] = BCC1;
+	frame[0] = FLAG; // estava F
+	frame[1] = FRAME_A_T ;  // estava A
+	frame[2] = FRAME_C_SET; // estava SETUP
+	frame[3] = FRAME_A_T  ^ FRAME_C_SET;  // estava BCC1
 
 	char BCC2 = data[0];
 
@@ -39,7 +39,7 @@ int createInformationFrame(char* data, size_t dataSize, char* frame) {
 	memcpy(&frame[4], stuffInfo, size);
 
 	frame[size + 4] = BCC2;
-	frame[size + 5] = F;
+	frame[size + 5] = FLAG;
 
 	return (size+6);
 }
@@ -80,7 +80,7 @@ int bccChecker(char* frame, size_t size) {
 		xorData ^= *(frame + 4 + i);
 	}
 
-	if(xorData != *(frame 4 + size)) {
+	if(xorData != *(frame + 4 + size)) {
 		return -2;
 	}
 	else return 0;
@@ -284,6 +284,18 @@ int llclose() {
    	 	char discR[5];
     	createSupervisionFrame(discR,FRAME_A_T,FRAME_C_DISC);
 
+      char discReceived[5];
+      /*
+      no outro trabalho ele adiciona isto
+      discReceived[0] = LFC_FLAG;
+    discReceived[1] = LFC_A_R;
+    discReceived[2] = LFC_C_DISC;
+    discReceived[3] = discReceived[1]^discReceived[2];
+    discReceived[4] = LFC_FLAG;
+
+      */
+
+
     	validator(discReceived, 5);
 
     	alarm(0);
@@ -306,6 +318,17 @@ int llclose() {
 		char discR[5];
     	createSupervisionFrame(discR,FRAME_A_T,FRAME_C_DISC);
 
+
+char discReceived[5];
+/*
+no outro trabalho ele adiciona isto
+discReceived[0] = LFC_FLAG;
+discReceived[1] = LFC_A_R;
+discReceived[2] = LFC_C_DISC;
+discReceived[3] = discReceived[1]^discReceived[2];
+discReceived[4] = LFC_FLAG;
+
+*/
     	validator(discReceived, 5);
 
     	alarm(0);
@@ -394,7 +417,7 @@ void sendREJ(int mode) {
 }
 
 int llwrite(unsigned char * buffer, int length) {
-    
+
     char uFrame[STUFF_MAX_SIZE];
     int xor = 0;
     int i;
@@ -409,7 +432,7 @@ int llwrite(unsigned char * buffer, int length) {
         uFrame[2] = FRAME_C_I0;
     else
         uFrame[2] = FRAME_C_I1;
-  
+
     uFrame[3] = uFrame[1]^uFrame[2];
 
     memcpy(&uFrame[4], &buffer[0], length);
@@ -463,10 +486,10 @@ int llread(unsigned char * buffer, int length) {
 
         if(pos >= MAX_FRAME_SIZE*2) {
             pos = 0;
-            flag = 0;          
+            flag = 0;
         }
 
-        int res = read(linkLayer.fileDescriptor, &sFrame[pos], 1); 
+        int res = read(linkLayer.fileDescriptor, &sFrame[pos], 1);
         if(sFrame[pos] == FLAG && flag == 0) {
             pos++;
             flag++;
@@ -503,7 +526,7 @@ int llread(unsigned char * buffer, int length) {
                 } else if(sFrame[pos] == FRAME_C_I1) {
                     thisSequenceNumber = 1;
                     pos++;
-                } else {              
+                } else {
                     sendREJ(linkLayer.sequenceNumber);
                     return -4;
                 }
@@ -534,7 +557,7 @@ int llread(unsigned char * buffer, int length) {
 
             linkLayer.frame[0] = FLAG;
             linkLayer.frame[1] = FRAME_A_T;
-            linkLayer.frame[2] = FRAME_C_DISC;    
+            linkLayer.frame[2] = FRAME_C_DISC;
             linkLayer.frame[3] = linkLayer.frame[1]^linkLayer.frame[2];
             linkLayer.frame[4] = FLAG;
 
@@ -581,7 +604,7 @@ int llread(unsigned char * buffer, int length) {
         exit(-1);
     }
 
-    
+
 
     if(length < linkLayer.frameSize-7)
         return -2;
@@ -592,16 +615,16 @@ int llread(unsigned char * buffer, int length) {
     temp[1] = FRAME_A_T;
 
     if(thisSequenceNumber == 0) {
-        temp[2] = LFC_C_RR1;        
+        temp[2] =  FRAME_C_RR1; //  estava LFC_C_RR1
     } else {
-        temp[2] = LFC_C_RR0;
+        temp[2] = FRAME_C_RR0; //  estava LFC_C_RR0
     }
 
     temp[3] = temp[1]^temp[2];
     temp[4] = FLAG;
 
     write(linkLayer.fileDescriptor, temp, 5);
-    
+
     if(linkLayer.sequenceNumber != thisSequenceNumber)
         return llread(buffer, length);
 

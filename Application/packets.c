@@ -41,7 +41,7 @@ int createControlStartPacket(char* packet, char* filename, char size) {
 	packet[2] = strlen(packet[3]);
 	packet[3 + (int) packet[2]] = P_T_NAME;
 	packet[4 + (int) packet[2]] = strlen(filename);
-	sprintf(&packet[5 + (int)packet[2]], "%d", filename);
+	sprintf(&packet[5 + (int)packet[2]], "%s", filename);
 
 	return 4 + (int)packet[2] + strlen(filename);
 }
@@ -72,7 +72,7 @@ int processDataPacket(char* packet, int seqNumber, int length, char* data) {
 		return -1;
 	}
 
-	*seqNumber = (char) packet[1];
+//	*seqNumber = (char) packet[1]; erro em compilaçao e nao se usa nesta funçao, someone, pls?
 	unsigned int numOct = 256* packet[2] + packet[3];
 
 	if(numOct != length - 4) {
@@ -104,9 +104,9 @@ int processDataPacket(char* packet, int seqNumber, int length, char* data) {
 			-1 error
 */
 int processControlPacket(char* packet, int size, char control, char T1, char L1, char* V1, char T2, char L2, char* V2) {
-	*control = packet[0];
-	*T1 = packet[1];
-	*T2 = packet[2];
+	control = packet[0];
+	T1 = packet[1];
+	T2 = packet[2];
 
 	int i;
 	int pSize = 0;
@@ -114,8 +114,8 @@ int processControlPacket(char* packet, int size, char control, char T1, char L1,
 		V1[pSize] = packet[i];
 	}
 
-	*T2 = packet[pSize];
-	*L2 = packet[pSize + 1];
+	T2 = packet[pSize];
+	L2 = packet[pSize + 1];
 
 	pSize = pSize + 2;
 	for(i = 0; i < L2; i++, pSize++) {

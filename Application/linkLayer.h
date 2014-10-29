@@ -5,6 +5,9 @@
 #include <stdio.h>
 #include "types.h"
 
+struct linkLayer linkLayer;
+
+struct termios oldtio, newtio;
 
 void resendFrame_alarm(int signo);
 

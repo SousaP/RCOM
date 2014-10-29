@@ -22,14 +22,14 @@ int main(int argc, char *argv[])
 
 
         if (argc == 7) {
-            strcpy(appData.filename,argv[6]);
-            appData.dataSize = atoi(argv[5]);
+            strcpy(appLayer.filename,argv[6]);
+            appLayer.dataSize = atoi(argv[5]);
         } else if(argc != 7) {
             printf("Wrong Arguments\n");
             return -1;
         }
 
-        transmitter();
+      transmitter();
 
     } else if(strcmp(argv[1], "receiver") == 0) {
 
@@ -38,8 +38,8 @@ int main(int argc, char *argv[])
             return -1;
         }
         printf("<Receiver>\n");
-        strcpy(appData.filename,argv[6]);
-        appData.dataSize = atoi(argv[5]);
+        strcpy(appLayer.filename,argv[6]);
+        appLayer.dataSize = atoi(argv[5]);
         receiver();
 
     } else {
