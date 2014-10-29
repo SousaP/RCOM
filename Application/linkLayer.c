@@ -270,58 +270,6 @@ Close port
 */
 int llclose() {
 
-	if(appMode == TRANSMITTER){
-		char discS[5];
-
-		createSupervisionFrame(discS,FRAME_A_T,FRAME_C_DISC);
-		memcpy(&linkLayer.frame[0], &discS[0], 5);
-    	linkLayer.frameSize = 5;
-    	linkLayer.numFailedTransmissions = 0;
-
-   	 	resendFrame_alarm(0);
-
-   	 	char discR[5];
-    	createSupervisionFrame(discR,FRAME_A_T,FRAME_C_DISC);
-
-    	validator(discR, 5);
-
-    	alarm(0);
-
-    	char UA[5];
-    	createSupervisionFrame(UA,FRAME_A_T,FRAME_C_UA);
-		memcpy(&linkLayer.frame[0], &UA[0], 5);
-    	linkLayer.frameSize = 5;
-    	linkLayer.numFailedTransmissions = 0;
-
-   		resendFrame_alarm(0);
-
-        alarm(0);
-
-   		sleep(2);
-	}
-	if(appMode == RECEIVER){
-		char discR[5];
-    	createSupervisionFrame(discR,FRAME_A_T,FRAME_C_DISC);
-
-    	validator(discR, 5);
-
-    	alarm(0);
-
-    	char discS[5];
-
-		createSupervisionFrame(discS,FRAME_A_T,FRAME_C_DISC);
-		memcpy(&linkLayer.frame[0], &discS[0], 5);
-    	linkLayer.frameSize = 5;
-    	linkLayer.numFailedTransmissions = 0;
-
-   	 	resendFrame_alarm(0);
-
-        char UA[5];
-        createSupervisionFrame(UA,FRAME_A_T,FRAME_C_UA);
-
-        validator(UA, 5);
-	}
-
     printf("Close\n");
     tcflush(linkLayer.fileDescriptor, TCOFLUSH);
 
