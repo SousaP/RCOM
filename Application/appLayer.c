@@ -38,7 +38,7 @@ int receiver(){
   while(1) {
 
     int bufferSize = llread(buffer, MAX_FRAME_SIZE - 6);
-
+    
     if(bufferSize < -1) {
       badFrames++;
     }

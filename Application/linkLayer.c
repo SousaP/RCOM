@@ -291,8 +291,6 @@ int waitResponse() {
         char tmp[2];
         read(linkLayer.fileDescriptor, tmp, 1);
 
-
-
         if(pos == 0 && tmp[0] == FLAG) {
             pos++;
         } else if(pos == 1 && tmp[0] == FRAME_A_T) {
@@ -399,7 +397,7 @@ int llread(unsigned char * buffer, int length) {
         return -2;
     }
 
-    char sFrame[MAX_FRAME_SIZE*2];
+    char sFrame[MAX_FRAME_SIZE];
     char uFrame[STUFF_MAX_SIZE];
     int thisSequenceNumber;
 
