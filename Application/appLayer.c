@@ -126,7 +126,7 @@ int appWrite() {
   size = st.st_size;
 
   char bufferS[MAX_FRAME_SIZE-6];
-  int sizeP = createControlStartPacket(bufferS, appLayer.filename, size);
+  int sizeP = createControlStartPacket(&bufferS, appLayer.filename, size);
   llwrite(bufferS, sizeP);
 
   char* dataP = (char*) malloc(size + 5);
@@ -147,14 +147,14 @@ int appWrite() {
   int i;
   for(i = 0; i < (int) size/appLayer.dataSize; i++) {
     memcpy(&data[0], &dataP[i*appLayer.dataSize], appLayer.dataSize);
-    int frameSize = createDataPacket(packetAux, numSeq, appLayer.dataSize, data); // estava sequenceNumber
+    int frameSize = createDataPacket(&packetAux, numSeq, appLayer.dataSize, data); // estava sequenceNumber
     llwrite(packetAux, frameSize);
     framesSent++;
   }
 
   if(i * appLayer.dataSize < size) {
     memcpy(&data[0], &dataP[i*appLayer.dataSize], size - i *appLayer.dataSize);
-    int frameSize = createDataPacket(packetAux, numSeq, size - i * appLayer.dataSize, data);// estava sequenceNumber
+    int frameSize = createDataPacket(&packetAux, numSeq, size - i * appLayer.dataSize, data);// estava sequenceNumber
     llwrite(packetAux, frameSize);
     framesSent++;
   }
