@@ -116,7 +116,7 @@ int transmitter() {
 
   appWrite();
 
-  lldisc();
+disconnect();
 
   return 0;
 }
