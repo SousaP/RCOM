@@ -1,6 +1,6 @@
 #include "appLayer.h"
 #include "packets.h"
-//#include <openssl/sha.h>
+#include <openssl/sha.h>
 
 int numSeq;
 int size;
@@ -66,11 +66,13 @@ int receiver(){
         char *data = (char*) malloc(sizeR + 5);
 
        if(read(fileR, data, sizeR) != -1) {
-          unsigned char hash[256];
+
+          unsigned char hash[SHA_DIGEST_LENGTH];
+
           SHA1(data, sizeR, hash);
 
           int i;
-          for(i = 0; i <= buffer[2]; i++) {
+          for(i = 0; i <= (int) buffer[2]; i++) {
             if(i == buffer[2]) {
               printf("SHA1 Checksum OK!\n");
               break;

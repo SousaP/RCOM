@@ -216,7 +216,6 @@ int llopen(){
         resendFrame_alarm(0);
         validator(UA, 5);
 
-
         alarm(0);
 
     }
@@ -246,8 +245,6 @@ void validator(unsigned char* frame, int frameSize) {
     while(STOP == FALSE) {
         char tmp[2];
         read(linkLayer.fileDescriptor, tmp, 1);
-
-
 
         if (frame[framePos+1] == tmp[0]) {
             framePos++;
