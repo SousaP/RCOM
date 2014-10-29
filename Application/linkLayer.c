@@ -531,7 +531,7 @@ int llread(unsigned char * buffer, int length) {
 
         if(uFrame[2] == FRAME_C_DISC) {
 
-        	createSupervisionFrame(&linkLayer.frame, FRAME_A_T, FRAME_C_DISC);
+        	createSupervisionFrame(linkLayer.frame, FRAME_A_T, FRAME_C_DISC);
             linkLayer.frameSize = 5;
             linkLayer.numFailedTransmissions = 0;
 
@@ -539,7 +539,7 @@ int llread(unsigned char * buffer, int length) {
 
             unsigned char uaDisc[5];
 
-            createSupervisionFrame(&linkLayer.frame, FRAME_A_T, FRAME_C_UA);
+            createSupervisionFrame(linkLayer.frame, FRAME_A_T, FRAME_C_UA);
             validator(uaDisc, 5);
 
             alarm(0);
@@ -606,18 +606,18 @@ int llread(unsigned char * buffer, int length) {
 }
 
 int disconnect() {
-	createSupervisionFrame(&linkLayer.frame, FRAME_A_T, FRAME_C_DISC);
+	createSupervisionFrame(linkLayer.frame, FRAME_A_T, FRAME_C_DISC);
 	linkLayer.frameSize = 5;
 	linkLayer.numFailedTransmissions = 0;
 
 	resendFrame_alarm(0);
 
 	char discR[5];
-	createSupervisionFrame(&discR, FRAME_A_R, FRAME_C_DISC);
+	createSupervisionFrame(discR, FRAME_A_R, FRAME_C_DISC);
 	validator(&discR)
 	alarm(0);
 
-	createSupervisionFrame(&linkLayer.frame, FRAME_A_R, FRAME_C_UA);
+	createSupervisionFrame(linkLayer.frame, FRAME_A_R, FRAME_C_UA);
 
 	write(linkLayer.fileDescriptor, linkLayer.frame, linkLayer.frameSize);
 
