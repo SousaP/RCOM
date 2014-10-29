@@ -23,9 +23,11 @@ int openFile(char* filename){
 }
 
 int receiver(){
+
   int sizeR = 0;
   int fileW = createFile(appLayer.filename);
   appLayer.fileDescriptor = llopen(RECEIVER);
+  fflush(stdout);
   printf("\nllopen Done");
   appLayer.sequenceNumber = -1;
 
@@ -34,33 +36,41 @@ int receiver(){
   int n = 0;
   char buffer[MAX_FRAME_SIZE - 6];
   char writeBUF[MAX_FRAME_SIZE - 6];
-
+int count = 0;
   while(1) {
 
     int bufferSize = llread(buffer, MAX_FRAME_SIZE - 6);
-    
-    if(bufferSize < -1) {
-      badFrames++;
+    int j;
+    for(j = 0; j < bufferSize; j++) {
+      printf("%d ", buffer[j]);
     }
-    else if(bufferSize == -1) {
+    if(bufferSize == -1) {
       break;
+    }
+
+    else if(bufferSize < -1) {
+      badFrames++;
     }
     else {
       if(buffer[0] == 0) {
         receivedFrames++;
+
       }
+      printf("\n%d received frames",receivedFrames);
     }
 
     if(buffer[0] == P_CONTROL_START) {
+      fflush(stdout);
       printf("Transmition started.......\n");
 
       int sizeT = (int) buffer[2];
 
-      char sizeC[100];
+      char sizeC[300];
       memcpy(&sizeC[0], &buffer[3], sizeT);
       size = atoi(&sizeC[0]); // estava (&sizechar[0]); pos oque esta agora
     }
     else if(buffer[0] == P_CONTROL_END) {
+      fflush(stdout);
       printf("Transmition ended!\n");
       if(buffer[1] == P_T_SHA1) {
         int fileR = openFile(appLayer.filename);
@@ -88,6 +98,8 @@ int receiver(){
       }
     }
     else {
+      fflush(stdout);
+      printf("blablabla");
       if(bufferSize > 4) {
         if((appLayer.sequenceNumber + 1)%128 != buffer[1]) {
           printf("Error in sequence number\n");
@@ -118,12 +130,15 @@ int transmitter() {
 
   appWrite();
 
+  printf("\nappWrite Done");
+
 disconnect();
 
   return 0;
 }
 
 int appWrite() {
+  printf("\nStarting appWrite");
   stat(appLayer.filename, &st);
   size = st.st_size;
 
@@ -140,7 +155,7 @@ int appWrite() {
     return -1;
   }
 
-  unsigned char hash[256];
+  unsigned char hash[SHA_DIGEST_LENGTH];
   SHA1(dataP, size, hash); // estava so data
 
   char data[MAX_FRAME_SIZE-6];

@@ -51,5 +51,6 @@ int main(int argc, char *argv[])
 
     llclose();
 
+    printf("\nThe job is done.");
 	return 0;
 }

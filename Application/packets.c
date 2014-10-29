@@ -43,7 +43,7 @@ int createControlStartPacket(char* packet, char* filename, char size) {
 	packet[4 + (int) packet[2]] = strlen(filename);
 	sprintf(&packet[5 + (int)packet[2]], "%s", filename);
 
-	return 4 + (int)packet[2] + strlen(filename);
+	return 4 + (int)packet[2] + strlen();
 }
 
 int createControlEndPacket(char* packet, char* hash) {
