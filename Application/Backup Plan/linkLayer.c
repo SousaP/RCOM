@@ -94,6 +94,7 @@ int llclose() {
   }
 
   close(lLayer.fileDescriptor);
+
 }
 
 void dfaReceive(unsigned char* frame, int frameSize) {
@@ -398,7 +399,7 @@ int waitResponse() {
     int action = 0;
     char rf[2];
     while(TRUE) {
-        char tmp[2];
+        unsigned char tmp[1];
         read(lLayer.fileDescriptor, tmp, 1);
 
 
