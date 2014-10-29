@@ -614,7 +614,7 @@ int disconnect() {
 
 	char discR[5];
 	createSupervisionFrame(discR, FRAME_A_R, FRAME_C_DISC);
-	validator(&discR)
+	validator(discR,5);
 	alarm(0);
 
 	createSupervisionFrame(linkLayer.frame, FRAME_A_R, FRAME_C_UA);
