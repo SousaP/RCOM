@@ -20,7 +20,7 @@ void resendFrame_alarm(int signo) {
 */
 int createInformationFrame(char* data, size_t dataSize, char* frame) {
 
-	char* stuffInfo = (char*)malloc(sizeof(char)*MAX_SIZE);
+	char* stuffInfo = (char*)malloc(sizeof(char)*MAX_FRAME_SIZE);
 
 	frame[0] = FLAG; // estava F
 	frame[1] = FRAME_A_T ;  // estava A
@@ -205,6 +205,8 @@ int llopen(){
     char UA[5];
     createSupervisionFrame(UA,FRAME_A_T,FRAME_C_UA);
 
+    printf("\n%c %c %c %c %c", UA[0], UA[1],UA[2],UA[3],UA[4]);
+
     char SET[5];
     createSupervisionFrame(SET,FRAME_A_T,FRAME_C_SET);
 
@@ -221,8 +223,8 @@ int llopen(){
     }
 
     else if(appMode == RECEIVER){
-        write(linkLayer.fileDescriptor, UA, sizeof(UA));
-
+      validator(SET,5);
+      write(linkLayer.fileDescriptor, UA, sizeof(UA));  
     }
     return linkLayer.fileDescriptor;
 }
