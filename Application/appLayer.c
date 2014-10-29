@@ -26,6 +26,7 @@ int receiver(){
   int sizeR = 0;
   int fileW = createFile(appLayer.filename);
   appLayer.fileDescriptor = llopen(RECEIVER);
+  printf("\nllopen Done");
   appLayer.sequenceNumber = -1;
 
   int receivedFrames = 0;
@@ -113,6 +114,7 @@ int receiver(){
 int transmitter() {
   numSeq = 0;
   appLayer.fileDescriptor = llopen(TRANSMITTER);
+  printf("\nllopen Done");
 
   appWrite();
 
