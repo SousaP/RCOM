@@ -205,7 +205,7 @@ int llopen(){
     char UA[5];
     createSupervisionFrame(UA,FRAME_A_T,FRAME_C_UA);
 
-    printf("\n%c %c %c %c %c", UA[0], UA[1],UA[2],UA[3],UA[4]);
+    printf("\n%x %x %x %x %x", UA[0], UA[1],UA[2],UA[3],UA[4]);
 
     char SET[5];
     createSupervisionFrame(SET,FRAME_A_T,FRAME_C_SET);
