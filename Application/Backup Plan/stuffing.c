@@ -22,7 +22,7 @@ int stuffing(char* data, int size, char* stuffed){
             break;
         }
 
-        if(byte == LFC_FLAG){
+        if(byte == FLAG){
             stuffed[j] = ESCAPE;
             j++;
             stuffed[j] = FLAG_AUX;
@@ -57,7 +57,7 @@ int unstuffing(char* stuffed, int size, char* data){
             i++;
             byte = stuffed[i];
             if(byte == FLAG_AUX){
-                data[j] = LFC_FLAG;
+                data[j] = FLAG;
                 j++;
             }
             else if(byte == ESCAPE_AUX){

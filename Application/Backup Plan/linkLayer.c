@@ -110,8 +110,6 @@ void dfaReceive(unsigned char* frame, int frameSize) {
         char tmp[2];
         read(lLayer.fileDescriptor, tmp, 1);
 
-
-
         if (frame[framePos+1] == tmp[0]) {
             framePos++;
         } else if (frame[0] == tmp[0]) {
@@ -131,7 +129,7 @@ void dfaReceive(unsigned char* frame, int frameSize) {
 
 int llwrite(unsigned char * buffer, int length) {
 
-    char uFrame[MAX_SIZE*2];
+    char uFrame[STUFF_MAX_SIZE];
 
     int xor = 0;
     int i;
@@ -184,13 +182,13 @@ int llread(unsigned char * buffer, int length) {
 
 
 
-    if(length > MAX_SIZE-6) {
+    if(length > MAX_FRAME_SIZE-6) {
         printf("ERROR: Invalid Length\n");
         return -2;
     }
 
-    char sFrame[MAX_SIZE*2];
-    char uFrame[MAX_SIZE];
+    char sFrame[STUFF_MAX_SIZE];
+    char uFrame[MAX_FRAME_SIZE];
     int thisSequenceNumber;
 
     int pos = 0;
@@ -198,7 +196,7 @@ int llread(unsigned char * buffer, int length) {
 
     while (flag < 2) {
 
-        if(pos >= MAX_SIZE*2) {
+        if(pos >= STUFF_MAX_SIZE) {
             pos = 0;
             flag = 0;
         }
@@ -354,8 +352,6 @@ int llread(unsigned char * buffer, int length) {
 }
 
 int lldisc() {
-
-
 
     lLayer.frame[0] = FLAG;
     lLayer.frame[1] = FRAME_A_T;
