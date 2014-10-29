@@ -59,6 +59,10 @@ int count = 0;
     }
 
     if(buffer[0] == P_CONTROL_START) {
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/master
       printf("Transmition started.......\n");
 
       int sizeT = (int) buffer[2];
@@ -68,6 +72,10 @@ int count = 0;
       size = atoi(&sizeC[0]); // estava (&sizechar[0]); pos oque esta agora
     }
     else if(buffer[0] == P_CONTROL_END) {
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/master
       printf("Transmition ended!\n");
       if(buffer[1] == P_T_SHA1) {
         int fileR = openFile(appLayer.filename);
@@ -95,6 +103,10 @@ int count = 0;
       }
     }
     else {
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/master
       printf("blablabla");
       if(bufferSize > 4) {
         if((appLayer.sequenceNumber + 1)%128 != buffer[1]) {
@@ -122,7 +134,7 @@ int count = 0;
 int transmitter() {
   numSeq = 0;
   appLayer.fileDescriptor = llopen(TRANSMITTER);
-  printf("\nllopen Done");
+
 
   appWrite();
 

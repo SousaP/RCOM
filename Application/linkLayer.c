@@ -106,7 +106,6 @@ unsigned short checksum(unsigned short *buffer, int count) {
 	return ~(sum & 0xFFFF);
 }
 
-
 /*
 *@param data
 *@param dataSize
@@ -114,6 +113,7 @@ unsigned short checksum(unsigned short *buffer, int count) {
 *@ret iterador do stuffing
 */
 int byteStuffing(char* data, int dataSize, char* stuff) {
+<<<<<<< HEAD
 	int i = 0;
 	int stuffITR = 0;
 	char byte;
@@ -138,6 +138,32 @@ int byteStuffing(char* data, int dataSize, char* stuff) {
 		++i;
 	}
 	return stuffITR;
+=======
+        int i = 0;
+        int stuffITR = 0;
+        char byte;
+        while(i < dataSize) {
+                byte = data[i];
+                if(byte == FLAG) {
+                        stuff[stuffITR] = ESCAPE;
+                        stuffITR++;
+                        stuff[stuffITR] = FLAG_AUX;
+                        stuffITR++;
+                }
+                else if(byte == ESCAPE) {
+                        stuff[stuffITR] = ESCAPE;
+                        stuffITR++;
+                        stuff[stuffITR] = ESCAPE_AUX;
+                        stuffITR++;
+                }
+                else{
+                        stuff[stuffITR] = byte;
+                        stuffITR++;
+                }
+                ++i;
+        }
+        return stuffITR;
+>>>>>>> origin/master
 }
 
 
@@ -148,6 +174,7 @@ int byteStuffing(char* data, int dataSize, char* stuff) {
 *@ret iterador do stuffing
 */
 int byteDestuffing(char* stuff, int stuffSize, char* data) {
+<<<<<<< HEAD
 	int i = 0;
 	int stuffITR = 0;
 	char byte;
@@ -174,6 +201,34 @@ int byteDestuffing(char* stuff, int stuffSize, char* data) {
 		++i;
 	}
 	return stuffITR;
+=======
+        int i = 0;
+        int stuffITR = 0;
+        char byte;
+        while(i < stuffSize){
+                byte = stuff[i];
+                if(byte == ESCAPE){
+                        byte = stuff[++i];
+                        if(byte == FLAG_AUX){
+                                data[stuffITR] = FLAG;
+                                stuffITR++;
+                        }
+                        else if(byte == ESCAPE_AUX){
+                                data[stuffITR] = ESCAPE;
+                                stuffITR++;
+                        }
+                        else{
+                                return -1;
+                        }
+                }
+                else{
+                        data[stuffITR] = byte;
+                        stuffITR++;
+                }
+                ++i;
+        }
+        return stuffITR;
+>>>>>>> origin/master
 }
 
 int llopen(){
@@ -434,7 +489,12 @@ int llread(unsigned char * buffer, int length) {
 
             if(pos == 1){
                 if(sFrame[pos] != FRAME_A_T) {
+<<<<<<< HEAD
                 	printf("sendREJ1\n");
+=======
+                  printf("qui1");
+                  printf("%x", sFrame[pos]);
+>>>>>>> origin/master
                     sendREJ(linkLayer.sequenceNumber);
                     return -4;
                 } else {
@@ -450,12 +510,17 @@ int llread(unsigned char * buffer, int length) {
                     thisSequenceNumber = 1;
                     pos++;
                 } else {
+<<<<<<< HEAD
                 	printf("sendREJ2\n");
+=======
+                  printf("%x", sFrame[pos]);
+>>>>>>> origin/master
                     sendREJ(linkLayer.sequenceNumber);
                     return -4;
                 }
             } else if(pos == 3) {
                 if(sFrame[pos] != (sFrame[pos-2]^sFrame[pos-1]) ){
+                  printf("qui3");
                     sendREJ(thisSequenceNumber);
                     return -4;
                 } else {
