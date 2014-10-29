@@ -113,87 +113,67 @@ unsigned short checksum(unsigned short *buffer, int count) {
 *@param stuff
 *@ret iterador do stuffing
 */
-int byteStuffing(char* data, int size, char* stuff) {
- int i = 0;
-    int j = 0;
-    char byte;
-
-    while(i < size){
-        byte = data[i];
-
-        if(i == 0) {
-            stuff[j] = byte;
-            i++;
-            j++;
-            continue;
-        }
-        else if(i == size-1) {
-            stuff[j] = byte;
-            j++;
-            break;
-        }
-
-        if(byte == FLAG){
-            stuff[j] = ESCAPE;
-            j++;
-            stuff[j] = FLAG_AUX;
-            j++;
-        }
-        else if(byte == ESCAPE){
-            stuff[j] = ESCAPE;
-            j++;
-            stuff[j] = ESCAPE_AUX;
-            j++;
-        }
-        else{
-            stuff[j] = byte;
-            j++;
-        }
-        i++;
-    }
-
-    return j;
+int byteStuffing(char* data, int dataSize, char* stuff) {
+	int i = 0;
+	int stuffITR = 0;
+	char byte;
+	while(i < dataSize) {
+		byte = data[i];
+		if(byte == FLAG) {
+			stuff[stuffITR] = ESCAPE;
+			stuffITR++;
+			stuff[stuffITR] = FLAG_AUX;
+			stuffITR++;
+		}
+		else if(byte == ESCAPE) {
+			stuff[stuffITR] = ESCAPE;
+			stuffITR++;
+			stuff[stuffITR] = ESCAPE_AUX;
+			stuffITR++;
+		}
+		else{
+			stuff[stuffITR] = byte;
+			stuffITR++;
+		}
+		++i;
+	}
+	return stuffITR;
 }
 
 
 /*
 *@param stuff
-*@param size
+*@param stuffSize
 *@param data
 *@ret iterador do stuffing
 */
-int byteDestuffing(char* stuff, int size, char* data) {
-    int i = 0;
-    int j = 0;
-    char byte;
-
-    while(i < size){
-
-        byte = stuff[i];
-
-        if(byte == ESCAPE){
-            i++;
-            byte = stuff[i];
-            if(byte == FLAG_AUX){
-                data[j] = FLAG;
-                j++;
-            }
-            else if(byte == ESCAPE_AUX){
-                data[j] = ESCAPE;
-                j++;
-            }
-            else{
-                printf("Error unstuffing\n");
-                return 0;
-            }
-        }
-        else{
-            data[j] = byte;
-            j++;
-        }
-        i++;
-    }
-    return j;
+int byteDestuffing(char* stuff, int stuffSize, char* data) {
+	int i = 0;
+	int stuffITR = 0;
+	char byte;
+	while(i < stuffSize){
+		byte = stuff[i];
+		if(byte == ESCAPE){
+			byte = stuff[++i];
+			if(byte == FLAG_AUX){
+				data[stuffITR] = FLAG;
+				stuffITR++;
+			}
+			else if(byte == ESCAPE_AUX){
+				data[stuffITR] = ESCAPE;
+				stuffITR++;
+			}
+			else{
+				return -1;
+			}
+		}
+		else{
+			data[stuffITR] = byte;
+			stuffITR++;
+		}
+		++i;
+	}
+	return stuffITR;
 }
 
 int llopen(){
@@ -417,8 +397,8 @@ int llread(unsigned char * buffer, int length) {
         return -2;
     }
 
-    char sFrame[MAX_FRAME_SIZE];
-    char uFrame[STUFF_MAX_SIZE];
+    char sFrame[STUFF_MAX_SIZE];
+    char uFrame[MAX_FRAME_SIZE];
     int thisSequenceNumber;
 
     int pos = 0;
@@ -426,7 +406,7 @@ int llread(unsigned char * buffer, int length) {
 
     while (flag < 2) {
 
-        if(pos >= MAX_FRAME_SIZE) {
+        if(pos >= STUFF_MAX_SIZE) {
             pos = 0;
             flag = 0;
         }
@@ -454,6 +434,7 @@ int llread(unsigned char * buffer, int length) {
 
             if(pos == 1){
                 if(sFrame[pos] != FRAME_A_T) {
+                	printf("sendREJ1\n");
                     sendREJ(linkLayer.sequenceNumber);
                     return -4;
                 } else {
@@ -469,6 +450,7 @@ int llread(unsigned char * buffer, int length) {
                     thisSequenceNumber = 1;
                     pos++;
                 } else {
+                	printf("sendREJ2\n");
                     sendREJ(linkLayer.sequenceNumber);
                     return -4;
                 }
@@ -504,7 +486,7 @@ int llread(unsigned char * buffer, int length) {
 
             unsigned char uaDisc[5];
 
-            createSupervisionFrame(uaDisc, FRAME_A_T, FRAME_C_UA);
+            createSupervisionFrame(linkLayer.frame, FRAME_A_T, FRAME_C_UA);
             validator(uaDisc, 5);
 
             alarm(0);

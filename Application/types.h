@@ -24,7 +24,7 @@
 
 // LINK
 
-#define MAX_FRAME_SIZE 256 // Frame max size
+#define MAX_FRAME_SIZE 512 // Frame max size
 #define STUFF_MAX_SIZE MAX_FRAME_SIZE*2 // Stuff frame max size
 
 // FRAMES
@@ -63,7 +63,7 @@ struct applicationLayer {
   int fileDescriptor; /*Descritor correspondente à porta série*/
   int status; /*TRANSMITTER | RECEIVER*/
   int dataSize;
-  char filename[256];
+  char filename[257];
   unsigned int sequenceNumber;
 };
 
