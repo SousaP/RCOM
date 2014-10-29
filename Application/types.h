@@ -23,9 +23,9 @@
 #define TRANSMITTER 1
 
 // LINK
-#define MAX_SIZE 255 // STUFF é com este valor ou com o de baixo?
-#define MAX_FRAME_SIZE 512 // Frame max size
-#define STUFF_MAX_SIZE MAX_SIZE*2 // Stuff frame max size
+
+#define MAX_FRAME_SIZE 256 // Frame max size
+#define STUFF_MAX_SIZE MAX_FRAME_SIZE*2 // Stuff frame max size
 
 // FRAMES
 

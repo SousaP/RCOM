@@ -445,8 +445,6 @@ int llwrite(unsigned char * buffer, int length) {
 
 int llread(unsigned char * buffer, int length) {
 
-
-
     if(length > MAX_FRAME_SIZE-6) {
         printf("ERROR: Invalid Length\n");
         return -2;
