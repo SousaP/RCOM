@@ -24,7 +24,7 @@ int openFile(char* filename){
 
 int receiver(){
   int sizeR = 0;
-  int fileW = create_file(appLayer.filename);
+  int fileW = createFile(appLayer.filename);
   appLayer.fileDescriptor = llopen(RECEIVER);
   appLayer.sequenceNumber = -1;
 

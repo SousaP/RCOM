@@ -208,7 +208,7 @@ int llopen(){
     char SET[5];
     createSupervisionFrame(SET,FRAME_A_T,FRAME_C_SET);
 
-    if(status == TRANSMITTER){
+    if(appMode == TRANSMITTER){
     	memcpy(&linkLayer.frame[0], &SET[0], 5);
     	linkLayer.frameSize = 5;
         linkLayer.numFailedTransmissions = 0;
@@ -220,7 +220,7 @@ int llopen(){
 
     }
 
-    else if(status == RECEIVER){
+    else if(appMode == RECEIVER){
         write(linkLayer.fileDescriptor, UA, sizeof(UA));
 
     }
@@ -268,7 +268,7 @@ Close port
 */
 int llclose() {
 
-	if(mode == TRANSMITTER){
+	if(appMode == TRANSMITTER){
 		char discS[5];
 
 		createSupervisionFrame(discS,FRAME_A_T,FRAME_C_DISC);
@@ -297,7 +297,7 @@ int llclose() {
 
    		sleep(2);
 	}
-	if(mode == RECEIVER){
+	if(appMode == RECEIVER){
 		char discR[5];
     	createSupervisionFrame(discR,FRAME_A_T,FRAME_C_DISC);
 
@@ -525,7 +525,7 @@ int llread(unsigned char * buffer, int length) {
             }
         }
     }
-    int uFrameSize = unstuffing(sFrame, pos, uFrame);
+    int uFrameSize = byteDestuffing(sFrame, pos, uFrame);
 
     if(uFrameSize == 5) {
 
@@ -551,7 +551,7 @@ int llread(unsigned char * buffer, int length) {
             uaDisc[3] = uaDisc[1]^uaDisc[2];
             uaDisc[4] = FLAG;
 
-            dfaReceive(uaDisc, 5);
+            validator(uaDisc, 5);
 
             alarm(0);
 

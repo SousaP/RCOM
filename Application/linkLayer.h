@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include "types.h"
 
+int appMode;
+
 struct linkLayer linkLayer;
 
 struct termios oldtio, newtio;

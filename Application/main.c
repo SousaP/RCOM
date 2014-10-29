@@ -28,6 +28,7 @@ int main(int argc, char *argv[])
             printf("Wrong Arguments\n");
             return -1;
         }
+        appMode = TRANSMITTER;
 
       transmitter();
 
@@ -38,6 +39,7 @@ int main(int argc, char *argv[])
             return -1;
         }
         printf("<Receiver>\n");
+        appMode = RECEIVER;
         strcpy(appLayer.filename,argv[6]);
         appLayer.dataSize = atoi(argv[5]);
         receiver();
