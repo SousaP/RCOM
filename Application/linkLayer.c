@@ -284,19 +284,7 @@ int llclose() {
    	 	char discR[5];
     	createSupervisionFrame(discR,FRAME_A_T,FRAME_C_DISC);
 
-      char discReceived[5];
-      /*
-      no outro trabalho ele adiciona isto
-      discReceived[0] = LFC_FLAG;
-    discReceived[1] = LFC_A_R;
-    discReceived[2] = LFC_C_DISC;
-    discReceived[3] = discReceived[1]^discReceived[2];
-    discReceived[4] = LFC_FLAG;
-
-      */
-
-
-    	validator(discReceived, 5);
+    	validator(discR, 5);
 
     	alarm(0);
 
@@ -307,8 +295,6 @@ int llclose() {
     	linkLayer.numFailedTransmissions = 0;
 
    		resendFrame_alarm(0);
-        validator(UA, 5);
-
 
         alarm(0);
 
@@ -318,18 +304,7 @@ int llclose() {
 		char discR[5];
     	createSupervisionFrame(discR,FRAME_A_T,FRAME_C_DISC);
 
-
-char discReceived[5];
-/*
-no outro trabalho ele adiciona isto
-discReceived[0] = LFC_FLAG;
-discReceived[1] = LFC_A_R;
-discReceived[2] = LFC_C_DISC;
-discReceived[3] = discReceived[1]^discReceived[2];
-discReceived[4] = LFC_FLAG;
-
-*/
-    	validator(discReceived, 5);
+    	validator(discR, 5);
 
     	alarm(0);
 
@@ -341,6 +316,11 @@ discReceived[4] = LFC_FLAG;
     	linkLayer.numFailedTransmissions = 0;
 
    	 	resendFrame_alarm(0);
+
+        char UA[5];
+        createSupervisionFrame(UA,FRAME_A_T,FRAME_C_UA);
+
+        validator(UA, 5);
 	}
 
     printf("Close\n");
