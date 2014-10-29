@@ -3,56 +3,52 @@
 
 
 void resendFrame_alarm(int signo) {
-    if(linkData.numFailedTransmissions >= linkData.numTransmissions) {
+    if(linkLayer.numFailedTransmissions >= linkLayer.numTransmissions) {
         printf("ERROR: Timeout\n");
-        llclose(linkData.fileDescriptor);
+        llclose(linkLayer.fileDescriptor);
         exit(0);
     }
-    linkData.numFailedTransmissions++;
+    linkLayer.numFailedTransmissions++;
 
-    write(linkData.fileDescriptor, linkData.frame, linkData.frameSize);
-    alarm(linkData.timeout);
+    write(linkLayer.fileDescriptor, linkLayer.frame, linkLayer.frameSize);
+    alarm(linkLayer.timeout);
 }
 
 int llopen(int type) {
 
     signal(SIGALRM,resendFrame_alarm);
 
-
-
-    linkData.fileDescriptor = open(linkData.port, O_RDWR | O_NOCTTY );
-    if (linkData.fileDescriptor < 0) {
-        perror(linkData.port); 
-        exit(-1); 
-    }
-
-
-    if ( tcgetattr(linkData.fileDescriptor,&oldtio) == -1) {
-        perror("tcgetattr");
+    linkLayer.fileDescriptor = open(linkLayer.port, O_RDWR | O_NOCTTY );
+    if (linkLayer.fileDescriptor < 0) {
+        perror(linkLayer.port);
         exit(-1);
     }
 
 
+    if ( tcgetattr(linkLayer.fileDescriptor,&oldtio) == -1) {
+        perror("tcgetattr");
+        exit(-1);
+    }
 
-    linkData.sequenceNumber = 0;
+    linkLayer.sequenceNumber = 0;
 
     bzero(&newtio, sizeof(newtio));
-    newtio.c_cflag = linkData.baudRate | CS8 | CLOCAL | CREAD;
+    newtio.c_cflag = linkLayer.baudRate | CS8 | CLOCAL | CREAD;
     newtio.c_iflag = IGNPAR;
     newtio.c_oflag = OPOST;
 
     newtio.c_lflag = 0;
 
-    newtio.c_cc[VTIME]    = 0;  
-    newtio.c_cc[VMIN]     = 1;  
+    newtio.c_cc[VTIME]    = 0;
+    newtio.c_cc[VMIN]     = 1;
 
-    tcflush(linkData.fileDescriptor, TCIFLUSH);
-    if ( tcsetattr(linkData.fileDescriptor,TCSANOW,&newtio) == -1) {
+    tcflush(linkLayer.fileDescriptor, TCIFLUSH);
+    if ( tcsetattr(linkLayer.fileDescriptor,TCSANOW,&newtio) == -1) {
       perror("tcsetattr");
       exit(-1);
     }
 
-    unsigned char set[5]; 
+    unsigned char set[5];
     set[0] = LFC_FLAG;
     set[1] = LFC_A_T;
     set[2] = LFC_C_SET;
@@ -66,16 +62,16 @@ int llopen(int type) {
     ua[3] = LFC_A_T^LFC_C_UA;
     ua[4] = LFC_FLAG;
 
-    if (type == RECEIVER) {  
+    if (type == RECEIVER) {
         dfaReceive(set, 5);
 
-        write(linkData.fileDescriptor,ua,5);
+        write(linkLayer.fileDescriptor,ua,5);
 
 
     } else if (type == TRANSMITTER) {
-        memcpy(&linkData.frame[0], &set[0], 5);
-        linkData.frameSize = 5;
-        linkData.numFailedTransmissions = 0;
+        memcpy(&linkLayer.frame[0], &set[0], 5);
+        linkLayer.frameSize = 5;
+        linkLayer.numFailedTransmissions = 0;
 
         resendFrame_alarm(0);
         dfaReceive(ua, 5);
@@ -84,20 +80,20 @@ int llopen(int type) {
         alarm(0);
     }
 
-    return linkData.fileDescriptor;
+    return linkLayer.fileDescriptor;
 }
 
 int llclose() {
 
     printf("Close\n");
-    tcflush(linkData.fileDescriptor, TCOFLUSH);
+    tcflush(linkLayer.fileDescriptor, TCOFLUSH);
 
-    if ( tcsetattr(linkData.fileDescriptor, TCSANOW, &oldtio) == -1) {
+    if ( tcsetattr(linkLayer.fileDescriptor, TCSANOW, &oldtio) == -1) {
       perror("tcsetattr");
       exit(-1);
   }
 
-  close(linkData.fileDescriptor);
+  close(linkLayer.fileDescriptor);
 }
 
 void dfaReceive(unsigned char* frame, int frameSize) {
@@ -112,7 +108,7 @@ void dfaReceive(unsigned char* frame, int frameSize) {
 
     while(STOP == FALSE) {
         char tmp[2];
-        read(linkData.fileDescriptor, tmp, 1);
+        read(linkLayer.fileDescriptor, tmp, 1);
 
 
 
@@ -127,14 +123,14 @@ void dfaReceive(unsigned char* frame, int frameSize) {
         }
 
         if (framePos == frameSize-1) {
-            STOP = TRUE;            
+            STOP = TRUE;
         }
     }
 
 }
 
 int llwrite(unsigned char * buffer, int length) {
-    
+
     char uFrame[MAX_SIZE*2];
 
     int xor = 0;
@@ -146,11 +142,11 @@ int llwrite(unsigned char * buffer, int length) {
     uFrame[0] = LFC_FLAG;
     uFrame[1] = LFC_A_T;
 
-    if(linkData.sequenceNumber == 0)
+    if(linkLayer.sequenceNumber == 0)
         uFrame[2] = LFC_C_I0;
     else
         uFrame[2] = LFC_C_I1;
-    
+
     uFrame[3] = uFrame[1]^uFrame[2];
 
     memcpy(&uFrame[4], &buffer[0], length);
@@ -158,9 +154,9 @@ int llwrite(unsigned char * buffer, int length) {
     uFrame[4+length] = xor;
     uFrame[4+length+1] = LFC_FLAG;
 
-    linkData.frameSize = stuffing(uFrame, 4+length+2, linkData.frame);
+    linkLayer.frameSize = stuffing(uFrame, 4+length+2, linkLayer.frame);
 
-    linkData.numFailedTransmissions = 0;
+    linkLayer.numFailedTransmissions = 0;
     resendFrame_alarm(0);
 
     while(TRUE) {
@@ -176,10 +172,10 @@ int llwrite(unsigned char * buffer, int length) {
         }
     }
 
-    if(linkData.sequenceNumber == 0)
-        linkData.sequenceNumber = 1;
+    if(linkLayer.sequenceNumber == 0)
+        linkLayer.sequenceNumber = 1;
     else
-        linkData.sequenceNumber = 0;
+        linkLayer.sequenceNumber = 0;
 
     return length + 6;
 }
@@ -204,10 +200,10 @@ int llread(unsigned char * buffer, int length) {
 
         if(pos >= MAX_SIZE*2) {
             pos = 0;
-            flag = 0;          
+            flag = 0;
         }
 
-        int res = read(linkData.fileDescriptor, &sFrame[pos], 1); 
+        int res = read(linkLayer.fileDescriptor, &sFrame[pos], 1);
         if(sFrame[pos] == LFC_FLAG && flag == 0) {
             pos++;
             flag++;
@@ -230,7 +226,7 @@ int llread(unsigned char * buffer, int length) {
 
             if(pos == 1){
                 if(sFrame[pos] != LFC_A_T) {
-                    sendREJ(linkData.sequenceNumber);
+                    sendREJ(linkLayer.sequenceNumber);
                     return -4;
                 } else {
                     pos++;
@@ -244,8 +240,8 @@ int llread(unsigned char * buffer, int length) {
                 } else if(sFrame[pos] == LFC_C_I1) {
                     thisSequenceNumber = 1;
                     pos++;
-                } else {              
-                    sendREJ(linkData.sequenceNumber);
+                } else {
+                    sendREJ(linkLayer.sequenceNumber);
                     return -4;
                 }
             } else if(pos == 3) {
@@ -273,14 +269,14 @@ int llread(unsigned char * buffer, int length) {
         if(uFrame[2] == LFC_C_DISC) {
 
 
-            linkData.frame[0] = LFC_FLAG;
-            linkData.frame[1] = LFC_A_R;
-            linkData.frame[2] = LFC_C_DISC;    
-            linkData.frame[3] = linkData.frame[1]^linkData.frame[2];
-            linkData.frame[4] = LFC_FLAG;
+            linkLayer.frame[0] = LFC_FLAG;
+            linkLayer.frame[1] = LFC_A_R;
+            linkLayer.frame[2] = LFC_C_DISC;
+            linkLayer.frame[3] = linkLayer.frame[1]^linkLayer.frame[2];
+            linkLayer.frame[4] = LFC_FLAG;
 
-            linkData.frameSize = 5;
-            linkData.numFailedTransmissions = 0;
+            linkLayer.frameSize = 5;
+            linkLayer.numFailedTransmissions = 0;
 
             resendFrame_alarm(0);
 
@@ -322,9 +318,9 @@ int llread(unsigned char * buffer, int length) {
         exit(-1);
     }
 
-    
 
-    if(length < linkData.frameSize-7)
+
+    if(length < linkLayer.frameSize-7)
         return -2;
 
 
@@ -333,7 +329,7 @@ int llread(unsigned char * buffer, int length) {
     temp[1] = LFC_A_T;
 
     if(thisSequenceNumber == 0) {
-        temp[2] = LFC_C_RR1;        
+        temp[2] = LFC_C_RR1;
     } else {
         temp[2] = LFC_C_RR0;
     }
@@ -341,15 +337,15 @@ int llread(unsigned char * buffer, int length) {
     temp[3] = temp[1]^temp[2];
     temp[4] = LFC_FLAG;
 
-    write(linkData.fileDescriptor, temp, 5);
-    
-    if(linkData.sequenceNumber != thisSequenceNumber)
+    write(linkLayer.fileDescriptor, temp, 5);
+
+    if(linkLayer.sequenceNumber != thisSequenceNumber)
         return llread(buffer, length);
 
     if(thisSequenceNumber == 0)
-        linkData.sequenceNumber = 1;
+        linkLayer.sequenceNumber = 1;
     else
-        linkData.sequenceNumber = 0;
+        linkLayer.sequenceNumber = 0;
 
 
 
@@ -361,15 +357,15 @@ int lldisc() {
 
 
 
-    linkData.frame[0] = LFC_FLAG;
-    linkData.frame[1] = LFC_A_T;
-    linkData.frame[2] = LFC_C_DISC;    
-    linkData.frame[3] = linkData.frame[1]^linkData.frame[2];
-    linkData.frame[4] = LFC_FLAG;
+    linkLayer.frame[0] = LFC_FLAG;
+    linkLayer.frame[1] = LFC_A_T;
+    linkLayer.frame[2] = LFC_C_DISC;
+    linkLayer.frame[3] = linkLayer.frame[1]^linkLayer.frame[2];
+    linkLayer.frame[4] = LFC_FLAG;
 
-    linkData.frameSize = 5;
+    linkLayer.frameSize = 5;
 
-    linkData.numFailedTransmissions = 0;
+    linkLayer.numFailedTransmissions = 0;
 
     resendFrame_alarm(0);
 
@@ -379,7 +375,7 @@ int lldisc() {
 
     discReceived[0] = LFC_FLAG;
     discReceived[1] = LFC_A_R;
-    discReceived[2] = LFC_C_DISC;    
+    discReceived[2] = LFC_C_DISC;
     discReceived[3] = discReceived[1]^discReceived[2];
     discReceived[4] = LFC_FLAG;
 
@@ -387,16 +383,16 @@ int lldisc() {
 
     alarm(0);
 
-    
-    linkData.frame[0] = LFC_FLAG;
-    linkData.frame[1] = LFC_A_R;
-    linkData.frame[2] = LFC_C_UA;
-    linkData.frame[3] = linkData.frame[1]^linkData.frame[2];
-    linkData.frame[4] = LFC_FLAG;
 
-    linkData.frameSize = 5;
+    linkLayer.frame[0] = LFC_FLAG;
+    linkLayer.frame[1] = LFC_A_R;
+    linkLayer.frame[2] = LFC_C_UA;
+    linkLayer.frame[3] = linkLayer.frame[1]^linkLayer.frame[2];
+    linkLayer.frame[4] = LFC_FLAG;
 
-    write(linkData.fileDescriptor, linkData.frame, linkData.frameSize);
+    linkLayer.frameSize = 5;
+
+    write(linkLayer.fileDescriptor, linkLayer.frame, linkLayer.frameSize);
 
     sleep(2);
 }
@@ -407,28 +403,28 @@ int waitResponse() {
     char rf[2];
     while(TRUE) {
         char tmp[2];
-        read(linkData.fileDescriptor, tmp, 1);
+        read(linkLayer.fileDescriptor, tmp, 1);
 
-    
+
 
         if(pos == 0 && tmp[0] == LFC_FLAG) {
             pos++;
         } else if(pos == 1 && tmp[0] == LFC_A_T) {
             rf[0] = tmp[0];
-            pos++;            
-        } else if(pos == 2 && linkData.sequenceNumber == 0 && tmp[0] == LFC_C_RR1) {
+            pos++;
+        } else if(pos == 2 && linkLayer.sequenceNumber == 0 && tmp[0] == LFC_C_RR1) {
             rf[1] = tmp[0];
             action = 0;
             pos++;
-        } else if(pos == 2 && linkData.sequenceNumber == 1 && tmp[0] == LFC_C_RR0) {
+        } else if(pos == 2 && linkLayer.sequenceNumber == 1 && tmp[0] == LFC_C_RR0) {
             rf[1] = tmp[0];
             action = 0;
             pos++;
-        } else if(pos == 2 && linkData.sequenceNumber == 0 && tmp[0] == LFC_C_REJ1) {
+        } else if(pos == 2 && linkLayer.sequenceNumber == 0 && tmp[0] == LFC_C_REJ1) {
             rf[1] = tmp[0];
             action = 1;
             pos++;
-        } else if(pos == 2 && linkData.sequenceNumber == 1 && tmp[0] == LFC_C_REJ0) {
+        } else if(pos == 2 && linkLayer.sequenceNumber == 1 && tmp[0] == LFC_C_REJ0) {
             rf[1] = tmp[0];
             action = 1;
             pos++;
@@ -451,7 +447,7 @@ void sendREJ(int sn) {
     temp[1] = LFC_A_T;
 
     if(sn == 0) {
-        temp[2] = LFC_C_REJ1;        
+        temp[2] = LFC_C_REJ1;
     } else {
         temp[2] = LFC_C_REJ0;
     }
@@ -459,8 +455,7 @@ void sendREJ(int sn) {
     temp[3] = temp[1]^temp[2];
     temp[4] = LFC_FLAG;
 
-    write(linkData.fileDescriptor, temp, 5);
+    write(linkLayer.fileDescriptor, temp, 5);
 
     printf("Sent REJ\n");
 }
-
