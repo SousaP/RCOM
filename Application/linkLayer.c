@@ -224,7 +224,7 @@ int llopen(){
 
     else if(appMode == RECEIVER){
       validator(SET,5);
-      write(linkLayer.fileDescriptor, UA, sizeof(UA));  
+      write(linkLayer.fileDescriptor, UA, sizeof(UA));
     }
     return linkLayer.fileDescriptor;
 }
