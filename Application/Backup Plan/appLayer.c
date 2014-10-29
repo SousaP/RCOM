@@ -23,8 +23,8 @@ void receiver() {
     int receivedFrames = 0;
     int failedFrames = 0;
     int n = 0;
-    char buffer[MAX_FRAME_SIZE-6];
-    char towrite[MAX_FRAME_SIZE-6];
+    unsigned char buffer[MAX_FRAME_SIZE-6];
+    unsigned char towrite[MAX_FRAME_SIZE-6];
 
     while(TRUE) {
         int bufferS = llread(buffer, MAX_FRAME_SIZE-6);
@@ -114,18 +114,16 @@ void receiver() {
 
 void appWrite() {
 
-    
     struct stat st;
     stat(appLayer.filename, &st);
     size = st.st_size;
 
     
-    char bufferstart[MAX_FRAME_SIZE-6];
+    unsigned char bufferstart[MAX_FRAME_SIZE-6];
     int result = createStart(bufferstart);
     llwrite(bufferstart,result);
 
-    
-    char * datacontent = (char *)malloc(size + 5);
+    unsigned char * datacontent = (unsigned char *)malloc(size + 5);
     int filewriter = open(appLayer.filename,O_RDONLY);
     if(read(filewriter,datacontent,size) == -1) {
         printf("ERROR: Open File\n");
@@ -133,13 +131,13 @@ void appWrite() {
         exit(-1);
     }
 
-    char md5sum[16];
+    unsigned char md5sum[16];
     MD5(datacontent, size, md5sum);
 
     
     int i;
-    char data[MAX_FRAME_SIZE-6];
-    char aux[MAX_FRAME_SIZE-6];
+    unsigned char data[MAX_FRAME_SIZE-6];
+    unsigned char aux[MAX_FRAME_SIZE-6];
     int sentFrames = 0;
     for(i = 0; i < (int)size/appLayer.dataSize; i++) {
 
@@ -147,7 +145,7 @@ void appWrite() {
         int framesize = createDataFrame(aux,data,appLayer.dataSize);
 
 
-        llwrite(aux,framesize);      
+        llwrite(aux,framesize);
         sentFrames++;
     }
 
@@ -155,21 +153,21 @@ void appWrite() {
     if(i * appLayer.dataSize < size) {
         memcpy(&data[0], &datacontent[i*appLayer.dataSize], size - i * appLayer.dataSize);
         int framesize = createDataFrame(aux, data, size - i * appLayer.dataSize);
-        llwrite(aux,framesize);      
+        llwrite(aux,framesize);
+
         sentFrames++;
     }
 
     printf("%d packets sent!\n", sentFrames);
 
 
-    char bufferend[MAX_FRAME_SIZE-6];
+    unsigned char bufferend[MAX_FRAME_SIZE-6];
     result = createEnd(bufferend, md5sum);
     llwrite(bufferend,result);
 
-    
 }
 
-int deleteDataFlags(char* aux,char* data, int dataSize) {
+int deleteDataFlags(unsigned char* aux,unsigned char* data, int dataSize) {
 
     int i;
     for(i=4;i<dataSize;i++)
@@ -181,7 +179,7 @@ int deleteDataFlags(char* aux,char* data, int dataSize) {
 }
 
 
-int createDataFrame(char* aux, char* data, int dataSize) {
+int createDataFrame(unsigned char* aux, unsigned char* data, int dataSize) {
     aux[0]=P_CONTROL_DATA;
     aux[1]=sequencenumber%128;
     aux[2]=(dataSize/256);
@@ -200,7 +198,7 @@ int createDataFrame(char* aux, char* data, int dataSize) {
     return 4+dataSize;
 }
 
-int createStart(char* aux) {
+int createStart(unsigned char* aux) {
     
     aux[0] = P_CONTROL_START;
     
@@ -216,7 +214,7 @@ int createStart(char* aux) {
     return 3 + ((int)aux[2]) + 1 + strlen(appLayer.filename);
 }
 
-int createEnd(char* aux, char* md5) {
+int createEnd(unsigned char* aux, unsigned char* md5) {
 
     aux[0] = P_CONTROL_END;
     aux[1] = P_T_SHA1;

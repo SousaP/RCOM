@@ -58,18 +58,14 @@
 #define FRAME_A_R       0x01 // Comandos enviados pelo Receptor; Respostas enviadas pelo Emissor
 
 #define FRAME_C_I0      0x00
-#define FRAME_C_I1      0x02
+#define FRAME_C_I1      0x10
 #define FRAME_C_SET     0x03
 #define FRAME_C_DISC    0x0B
 #define FRAME_C_UA      0x07
 #define FRAME_C_RR0     0x05
-#define FRAME_C_RR1     0x25
+#define FRAME_C_RR1     0x85
 #define FRAME_C_REJ0    0x01
 #define FRAME_C_REJ1    0x81
-
-
-// NOT USED ANYMORE
-// define MODEMDEVICE "/dev/ttyS1" 
 
 struct applicationLayer {
     int fileDescriptor; /*Descritor correspondente à porta série*/
