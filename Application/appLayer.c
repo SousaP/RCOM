@@ -27,7 +27,6 @@ int receiver(){
   int sizeR = 0;
   int fileW = createFile(appLayer.filename);
   appLayer.fileDescriptor = llopen(RECEIVER);
-  fflush(stdout);
   printf("\nllopen Done");
   appLayer.sequenceNumber = -1;
 
@@ -60,7 +59,7 @@ int count = 0;
     }
 
     if(buffer[0] == P_CONTROL_START) {
-      fflush(stdout);
+
       printf("Transmition started.......\n");
 
       int sizeT = (int) buffer[2];
@@ -70,7 +69,7 @@ int count = 0;
       size = atoi(&sizeC[0]); // estava (&sizechar[0]); pos oque esta agora
     }
     else if(buffer[0] == P_CONTROL_END) {
-      fflush(stdout);
+
       printf("Transmition ended!\n");
       if(buffer[1] == P_T_SHA1) {
         int fileR = openFile(appLayer.filename);
@@ -98,7 +97,7 @@ int count = 0;
       }
     }
     else {
-      fflush(stdout);
+
       printf("blablabla");
       if(bufferSize > 4) {
         if((appLayer.sequenceNumber + 1)%128 != buffer[1]) {
@@ -126,7 +125,7 @@ int count = 0;
 int transmitter() {
   numSeq = 0;
   appLayer.fileDescriptor = llopen(TRANSMITTER);
-  printf("\nllopen Done");
+
 
   appWrite();
 
