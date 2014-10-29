@@ -192,6 +192,7 @@ int llopen(){
         exit(-1);
     }
 
+    linkLayer.sequenceNumber = 0;
     bzero(&newtio, sizeof(newtio));
     newtio.c_cflag = linkLayer.baudRate | CS8 | CLOCAL | CREAD;
     newtio.c_iflag = IGNPAR;
@@ -204,8 +205,6 @@ int llopen(){
 
     char UA[5];
     createSupervisionFrame(UA,FRAME_A_T,FRAME_C_UA);
-
-    printf("\n%x %x %x %x %x", UA[0], UA[1],UA[2],UA[3],UA[4]);
 
     char SET[5];
     createSupervisionFrame(SET,FRAME_A_T,FRAME_C_SET);
@@ -224,7 +223,7 @@ int llopen(){
 
     else if(appMode == RECEIVER){
       validator(SET,5);
-      write(linkLayer.fileDescriptor, UA, sizeof(UA));
+      write(linkLayer.fileDescriptor, UA, 5);
     }
     return linkLayer.fileDescriptor;
 }
