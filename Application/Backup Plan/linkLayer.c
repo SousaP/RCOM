@@ -5,7 +5,7 @@ void resendFrameAlrm(int signo) {
     if(lLayer.numFailedTransmissions >= lLayer.numTransmissions) {
         printf("ERROR: Timeout\n");
         llclose(lLayer.fileDescriptor);
-        exit(0);
+        exit(-1);
     }
     lLayer.numFailedTransmissions++;
 
@@ -287,23 +287,20 @@ int llread(unsigned char * buffer, int length) {
 
 int lldisc() {
 
-createSupervisionFrame(lLayer.frame,FRAME_A_T,FRAME_C_DISC);
+    createSupervisionFrame(lLayer.frame,FRAME_A_T,FRAME_C_DISC);
 
     lLayer.frameSize = 5;
-
     lLayer.numFailedTransmissions = 0;
 
     resendFrameAlrm(0);
 
     unsigned char discReceived[5];
-
-createSupervisionFrame(discReceived,FRAME_A_R,FRAME_C_DISC);
-
+    createSupervisionFrame(discReceived,FRAME_A_R,FRAME_C_DISC);
     validator(discReceived, 5);
 
     alarm(0);
 
-createSupervisionFrame(lLayer.frame,FRAME_A_R,FRAME_C_UA);
+    createSupervisionFrame(lLayer.frame,FRAME_A_R,FRAME_C_UA);
 
     lLayer.frameSize = 5;
 
@@ -321,12 +318,12 @@ void validator(unsigned char* frame, int frameSize) {
     int framePos = -1;
 
     while(STOP == FALSE) {
-        unsigned char tmp[1];
-        read(lLayer.fileDescriptor, tmp, 1);
+        unsigned char ch[1];
+        read(lLayer.fileDescriptor, ch, 1);
 
-        if (frame[framePos+1] == tmp[0]) {
+        if (frame[framePos+1] == ch[0]) {
             framePos++;
-        } else if (frame[0] == tmp[0]) {
+        } else if (frame[0] == ch[0]) {
             framePos = 0;
         } else {
             framePos = -1;
@@ -341,37 +338,37 @@ void validator(unsigned char* frame, int frameSize) {
 int waitForSignal() {
     int pos = 0;
     int watDo = 0;
-    char rf[2];
+    char xorF[2];
     while(TRUE) {
-        unsigned char tmp[1];
-        read(lLayer.fileDescriptor, tmp, 1);
+        unsigned char ch[1];
+        read(lLayer.fileDescriptor, ch, 1);
 
-        if(pos == 0 && tmp[0] == FLAG) {
+        if(pos == 0 && ch[0] == FLAG) {
             pos++;
-        } else if(pos == 1 && tmp[0] == FRAME_A_T) {
-            rf[0] = tmp[0];
+        } else if(pos == 1 && ch[0] == FRAME_A_T) {
+            xorF[0] = ch[0];
             pos++;
-        } else if(pos == 2 && lLayer.sequenceNumber == 0 && tmp[0] == FRAME_C_RR1) {
-            rf[1] = tmp[0];
+        } else if(pos == 2 && lLayer.sequenceNumber == 0 && ch[0] == FRAME_C_RR1) {
+            xorF[1] = ch[0];
             watDo = 0;
             pos++;
-        } else if(pos == 2 && lLayer.sequenceNumber == 1 && tmp[0] == FRAME_C_RR0) {
-            rf[1] = tmp[0];
+        } else if(pos == 2 && lLayer.sequenceNumber == 1 && ch[0] == FRAME_C_RR0) {
+            xorF[1] = ch[0];
             watDo = 0;
             pos++;
-        } else if(pos == 2 && lLayer.sequenceNumber == 0 && tmp[0] == FRAME_C_REJ1) {
-            rf[1] = tmp[0];
+        } else if(pos == 2 && lLayer.sequenceNumber == 0 && ch[0] == FRAME_C_REJ1) {
+            xorF[1] = ch[0];
             watDo = 1;
             pos++;
-        } else if(pos == 2 && lLayer.sequenceNumber == 1 && tmp[0] == FRAME_C_REJ0) {
-            rf[1] = tmp[0];
+        } else if(pos == 2 && lLayer.sequenceNumber == 1 && ch[0] == FRAME_C_REJ0) {
+            xorF[1] = ch[0];
             watDo = 1;
             pos++;
-        } else if(pos == 3 && tmp[0] == rf[0]^rf[1]) {
+        } else if(pos == 3 && ch[0] == xorF[0]^xorF[1]) {
             pos++;
-        } else if(pos == 4 && tmp[0] == FLAG) {
+        } else if(pos == 4 && ch[0] == FLAG) {
             break;
-        } else if(tmp[0] == FLAG) {
+        } else if(ch[0] == FLAG) {
             pos = 1;
         } else {
             pos = 0;

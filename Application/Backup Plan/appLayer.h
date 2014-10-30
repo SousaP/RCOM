@@ -11,7 +11,7 @@ void receiver();
 
 void appWrite();
 
-void representloadingbar(int inicio, int size);
+void loadingBar(int filled, int size);
 
 #endif
 

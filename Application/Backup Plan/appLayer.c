@@ -76,14 +76,13 @@ void receiver() {
                     continue;
                 }
             }
-            printf("Could not verify Checksum.\n");
         }
         else
         {
             if(bufferS > 4) {
 
                 if((appLayer.sequenceNumber+1)%128 != buffer[1]) {
-                    printf("ERROR: App Sequence Number");
+                    printf("Wrong sequence number!");
                     continue;
                 }
                 appLayer.sequenceNumber++;
@@ -97,7 +96,7 @@ void receiver() {
                 receivedFrames++;
                 sizeReceived += bufferS - 4;
                 n++;
-                representloadingbar(sizeReceived, size);
+                loadingBar(sizeReceived, size);
             }
         }
     }
@@ -120,7 +119,7 @@ void appWrite() {
     unsigned char * dataC = (char *)malloc(size + 5);
     int fileW = open(appLayer.filename, O_RDONLY);
     if(read(fileW,dataC,size) == -1) {
-        printf("ERROR: Open File\n");
+        printf("Error opening file: %s\n", appLayer.filename);
         llclose();
         exit(-1);
     }
@@ -149,7 +148,7 @@ void appWrite() {
 
     }
 
-    printf("%d packets sent!\n", sentFrames);
+    printf("A total of %d packets were sent!\n", sentFrames);
 
     unsigned char bufferend[MAX_FRAME_SIZE-6];
     result = createControlEndPacket(bufferend, hash);
@@ -157,20 +156,18 @@ void appWrite() {
 
 }
 
-void representloadingbar(int inicio, int size) {
+void loadingBar(int filled, int size) {
     system("clear");
+
+    int bar = (float)(1.0*filled/size)*40.0;
+    int totalSize = 40 - bar;
     int i = 0;
-
-    int trace = (float)(1.0*inicio/size)*20.0;
-    int space = 20 - trace;
-
-    for(i = 0; i < trace; i++) {
-        printf("\u25A0");
+    for(i = 0; i < bar; i++) {
+        printf("%c", '=');
     }
-
-    for(i = 0; i < space; i++) {
+    for(i = 0; i < totalSize; i++) {
         printf(" ");
     }
 
-    printf(" %d / %d bytes \n",inicio,size);
+    printf("\n\n%d / %d bytes sent\n",filled,size);
 }
