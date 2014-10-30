@@ -39,17 +39,19 @@ int main(int argc, char *argv[])
 
         }
     }
-   
 
-
-    if (strcmp(argv[1], "transmitter") == 0) {
-
-        printf("*Transmitter*\n");
+    if (strcmp(argv[1], "send") == 0) {
+        system("clear");
+        printf("Sender machine!\n");
         
    
         if (argc == 8) {
             strcpy(appLayer.filename,argv[6]);
             appLayer.dataSize = atoi(argv[7]);
+            if(appLayer.dataSize > MAX_FRAME_SIZE){
+            printf("Frame size too big!\n");
+            return -1;
+        }
         } else if(argc != 6) {
             printf("ARGUMENTS ERROR\n./rcom type port tries timeout baundrate [file framesize]\n");
             return -1; 
@@ -57,20 +59,25 @@ int main(int argc, char *argv[])
 
         transmitter();
 
-    } else if(strcmp(argv[1], "receiver") == 0) {
+    } else if(strcmp(argv[1], "receive") == 0) {
 
         if(argc < 7) {
             printf("ARGUMENTS ERROR\nfilename is required\n");
             return -1; 
         }
-        printf("*Receiver*\n");
+        system("clear");
+        printf("Receive machine!\n");
         strcpy(appLayer.filename,argv[6]);
         if(argc > 7)
             appLayer.dataSize = atoi(argv[7]);
+        if(appLayer.dataSize > MAX_FRAME_SIZE){
+            printf("Frame size too big!\n");
+            return -1;
+        }
         receiver();
 
     } else {
-        printf("ARGUMENTS ERROR\ntype should be 'receiver' or 'transmitter'\n");
+        printf("ARGUMENTS ERROR\ntype should be 'receive' or 'send\n");
         return -1; 
     }
 
