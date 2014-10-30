@@ -1,6 +1,7 @@
 #include "linkLayer.h"
 #include "appLayer.h"
 
+
 void resendFrame_alarm(int signo) {
     if(lLayer.numFailedTransmissions >= lLayer.numTransmissions) {
         printf("ERROR: Timeout\n");
@@ -336,10 +337,6 @@ int llread(unsigned char * buffer, int length) {
     temp[4] = FLAG;
 
     write(lLayer.fileDescriptor, temp, 5);
-    int i;
-    for(i = 0; i < 5; i++) {
-        printf("%x\n", temp[i]);
-    }
 
     if(lLayer.sequenceNumber != thisSequenceNumber)
         return llread(buffer, length);
@@ -368,6 +365,8 @@ int lldisc() {
     lLayer.numFailedTransmissions = 0;
 
     resendFrame_alarm(0);
+
+
 
     char discReceived[5];
 
@@ -401,8 +400,7 @@ int waitResponse() {
     char rf[2];
     while(TRUE) {
         unsigned char tmp[1];
-        read(lLayer.fileDescriptor, tmp, sizeof(char));
-        printf("%x\n", tmp[0]);
+        read(lLayer.fileDescriptor, tmp, 1);
 
         if(pos == 0 && tmp[0] == FLAG) {
             pos++;

@@ -11,9 +11,11 @@ void receiver();
 
 void appWrite();
 
-int createDataFrame(char* aux, char* data, int framesize); //retorna o novo tamanho
+int createDataFrame(unsigned char* aux, unsigned char* data, int framesize); //retorna o novo tamanho
 
-int createStart(char * buffer);
+int createStart(unsigned char * buffer);
+
+int createEnd(unsigned char* aux, unsigned char* hash);
 
 void representloadingbar(int inicio, int size);
 

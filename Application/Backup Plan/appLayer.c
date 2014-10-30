@@ -1,5 +1,6 @@
 #include "appLayer.h"
-#include <openssl/md5.h>
+
+#include <openssl/sha.h>
 
 int size;
 int sequencenumber;
@@ -7,9 +8,9 @@ int sequencenumber;
 void transmitter() {
     sequencenumber = 0;
     appLayer.fileDescriptor = llopen(TRANSMITTER);
-    
+
     appWrite();
-    
+
     lldisc();
 }
 
@@ -26,14 +27,14 @@ void receiver() {
     char towrite[MAX_FRAME_SIZE-6];
 
     while(TRUE) {
-        int tamanhobuffer = llread(buffer, MAX_FRAME_SIZE-6);
+        int bufferS = llread(buffer, MAX_FRAME_SIZE-6);
 
-        if(tamanhobuffer == -1){
+        if(bufferS == -1){
             break;
-        } else if(tamanhobuffer < -1){
+        } else if(bufferS < -1){
             failedFrames++;
-        } else {            
-            if(buffer[0] == 0){
+        } else {
+            if(buffer[0] == FRAME_C_I0){
                 receivedFrames++;
             }
         }
@@ -42,13 +43,13 @@ void receiver() {
         {
             printf("Start Transmission\n");
 
-            
+
             int sizelength=(int)buffer[2];
-            
+
             char sizechar[300];
             memcpy(&sizechar[0], &buffer[3], sizelength);
             size = atoi(&sizechar[0]);
-            
+
         }
         else if(buffer[0]==P_CONTROL_END)
         {
@@ -59,32 +60,32 @@ void receiver() {
                 int filereader = open(appLayer.filename,O_RDONLY);
                 if(read(filereader,datacontent,sizeReceived) != -1) {
 
-                    char md5sum[16];
-                    MD5(datacontent, sizeReceived, md5sum);
+                    unsigned char hash[SHA_DIGEST_LENGTH];
+                    SHA1(datacontent, sizeReceived, hash);
 
                     int i;
                     for(i = 0; i <= buffer[2]; i++) {
                         if(i == buffer[2]) {
-                            printf("Checksum -- Success.\n");
+                            printf("SHA1 Checksum -- Success.\n");
                             break;
                         }
 
-                        if(md5sum[i] != buffer[i+3]) {
-                            printf("Checksum -- Error.\n");
+                        if(hash[i] != buffer[i+3]) {
+                            printf("SHA1 Checksum -- Error.\n");
                             break;
                         }
                     }
                     continue;
                 }
             }
-            
+
             printf("Could not verify Checksum.\n");
         }
         else
         {
-            if(tamanhobuffer > 4) {
+            if(bufferS > 4) {
 
-                
+
                 if((appLayer.sequenceNumber+1)%128 != buffer[1]) {
                     printf("ERROR: App Sequence Number");
                     continue;
@@ -92,17 +93,18 @@ void receiver() {
 
                 appLayer.sequenceNumber++;
 
-                int lengthtowrite = deleteDataFlags(towrite,buffer,tamanhobuffer);
-                
+                int lengthtowrite = deleteDataFlags(towrite,buffer,bufferS);
+
                 write(filewriter,towrite,lengthtowrite);
+                receivedFrames++;
 
 
                 sizeReceived += lengthtowrite;
                 n++;
-                
+
                 representloadingbar(sizeReceived,size);
             }
-             
+
         }
     }
 
@@ -113,16 +115,17 @@ void receiver() {
 
 void appWrite() {
 
+
     struct stat st;
     stat(appLayer.filename, &st);
     size = st.st_size;
 
-    
+
     char bufferstart[MAX_FRAME_SIZE-6];
     int result = createStart(bufferstart);
     llwrite(bufferstart,result);
 
-    
+
     char * datacontent = (char *)malloc(size + 5);
     int filewriter = open(appLayer.filename,O_RDONLY);
     if(read(filewriter,datacontent,size) == -1) {
@@ -131,10 +134,10 @@ void appWrite() {
         exit(-1);
     }
 
-    char md5sum[16];
-    MD5(datacontent, size, md5sum);
+    unsigned char hash[SHA_DIGEST_LENGTH];
+    SHA1(datacontent, size, hash);
 
-    
+
     int i;
     char data[MAX_FRAME_SIZE-6];
     char aux[MAX_FRAME_SIZE-6];
@@ -145,15 +148,15 @@ void appWrite() {
         int framesize = createDataFrame(aux,data,appLayer.dataSize);
 
 
-        llwrite(aux,framesize);      
+        llwrite(aux,framesize);
         sentFrames++;
     }
 
-    
+
     if(i * appLayer.dataSize < size) {
         memcpy(&data[0], &datacontent[i*appLayer.dataSize], size - i * appLayer.dataSize);
         int framesize = createDataFrame(aux, data, size - i * appLayer.dataSize);
-        llwrite(aux,framesize);      
+        llwrite(aux,framesize);
         sentFrames++;
     }
 
@@ -161,10 +164,10 @@ void appWrite() {
 
 
     char bufferend[MAX_FRAME_SIZE-6];
-    result = createEnd(bufferend, md5sum);
+    result = createEnd(bufferend, hash);
     llwrite(bufferend,result);
 
-    
+
 }
 
 int deleteDataFlags(char* aux,char* data, int dataSize) {
@@ -179,31 +182,28 @@ int deleteDataFlags(char* aux,char* data, int dataSize) {
 }
 
 
-int createDataFrame(char* aux, char* data, int dataSize) {
+int createDataFrame(unsigned char* aux, unsigned char* data, int dataSize) {
     aux[0]=P_CONTROL_DATA;
     aux[1]=sequencenumber%128;
     aux[2]=(dataSize/256);
     aux[3]=dataSize%256;
 
-   
+
     int i;
-    for(i=0;i<dataSize;i++)
-    {
+    for(i=0;i<dataSize;i++) {
         aux[i+4] = data[i];
-        
+
     }
-    
+
 
     sequencenumber++;
 
     return 4+dataSize;
 }
 
-int createStart(char* aux) {
-    
+int createStart(unsigned char* aux) {
+
     aux[0] = P_CONTROL_START;
-    
-    
 
     aux[1] = P_T_SIZE;
     sprintf(&aux[3],"%d",size);
@@ -217,16 +217,17 @@ int createStart(char* aux) {
     return 3 + ((int)aux[2]) + 1 + strlen(appLayer.filename);
 }
 
-int createEnd(char* aux, char* md5) {
+int createEnd(unsigned char* aux, unsigned char* hash) {
 
     aux[0] = P_CONTROL_END;
     aux[1] = P_T_SHA1;
-    aux[2] = 16;
+    aux[2] = SHA_DIGEST_LENGTH;
     int i;
-    for(i = 0; i < 16; i++)
-        aux[i+3] = md5[i];
-
-    return 3 + 16;
+    for(i = 0; i < (int) SHA_DIGEST_LENGTH; i++)
+        aux[i+3] = hash[i];
+    for(i = 0; i < (int) SHA_DIGEST_LENGTH; i++) 
+        printf("%x\n", hash[i]);
+    return 3 + SHA_DIGEST_LENGTH;
 }
 
 void representloadingbar(int inicio, int size) {
@@ -234,7 +235,7 @@ void representloadingbar(int inicio, int size) {
     system("clear");
     int i = 0;
     printf("[");
-    
+
     int escrevetraco = (float)(1.0*inicio/size)*20.0;
     int escrevespaces = 20 - escrevetraco;
 
