@@ -33,7 +33,7 @@ int createDataPacket(unsigned char* packet, int seqNumber, int length, unsigned 
 *@ret int -> Total packet size
 */
 
-int createControlStartPacket(unsigned char* packet, unsigned char* filename, unsigned char size) {
+int createControlStartPacket(char* packet, unsigned char* filename, int size) {
 
 	sprintf(&packet[3], "%d", size);
 	packet[0] = P_CONTROL_START;
@@ -46,7 +46,7 @@ int createControlStartPacket(unsigned char* packet, unsigned char* filename, uns
 	return 4 + (int)packet[2] + strlen(filename);
 }
 
-int createControlEndPacket(unsigned char* packet, unsigned char* hash) {
+int createControlEndPacket(char* packet, unsigned char* hash) {
 	packet[0] = P_CONTROL_END;
 	packet[1] = P_T_SHA1;
 	packet[2] = SHA_DIGEST_LENGTH;
