@@ -369,8 +369,6 @@ int lldisc() {
 
     resendFrame_alarm(0);
 
-
-
     char discReceived[5];
 
     discReceived[0] = FLAG;
@@ -404,9 +402,7 @@ int waitResponse() {
     while(TRUE) {
         unsigned char tmp[1];
         read(lLayer.fileDescriptor, tmp, sizeof(char));
-
-        read(lLayer.fileDescriptor, tmp, 1);
-
+        printf("%x\n", tmp[0]);
 
         if(pos == 0 && tmp[0] == FLAG) {
             pos++;

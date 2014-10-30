@@ -1,7 +1,6 @@
 #include "stuffing.h"
 
 
-
 int stuffing(char* data, int size, char* stuffed){
     int i = 0;
     int j = 0;
