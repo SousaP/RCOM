@@ -152,11 +152,11 @@ int llwrite(unsigned char * buffer, int length) {
 
     uFrame[4+length] = xor;
     uFrame[4+length+1] = FLAG;
-
+/*
     for(i = 0; i < 6 + length; i++) {
         printf("%x", uFrame[i]);
     }
-
+*/
     lLayer.frameSize = stuffing(uFrame, 4+length+2, lLayer.frame);
     
     lLayer.numFailedTransmissions = 0;
@@ -184,8 +184,6 @@ int llwrite(unsigned char * buffer, int length) {
 }
 
 int llread(unsigned char * buffer, int length) {
-
-
 
     if(length > MAX_FRAME_SIZE-6) {
         printf("ERROR: Invalid Length\n");
@@ -266,10 +264,10 @@ int llread(unsigned char * buffer, int length) {
         }
     }
     int uFrameSize = unstuffing(sFrame, pos, uFrame);
-    int i;
+  /*  int i;
      for(i = 0; i < pos; i++) {
         printf("%x", uFrame[i]);
-    }
+    }*/
     if(uFrameSize == 5) {
 
         if(uFrame[2] == FRAME_C_DISC) {

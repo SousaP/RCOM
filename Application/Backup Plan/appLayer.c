@@ -76,7 +76,6 @@ void receiver() {
                     continue;
                 }
             }
-
             printf("Could not verify Checksum.\n");
         }
         else
@@ -98,7 +97,7 @@ void receiver() {
                 receivedFrames++;
                 sizeReceived += bufferS - 4;
                 n++;
-               // representloadingbar(sizeReceived, size);
+                //representloadingbar(sizeReceived, size);
             }
         }
     }
@@ -138,26 +137,25 @@ void appWrite() {
         memcpy(&data[0], &dataC[i*appLayer.dataSize], appLayer.dataSize);
         int framesize = createDataPacket(aux,numSeq,appLayer.dataSize, data);
         numSeq++;
+        printf("%d\n", numSeq);
         llwrite(aux,framesize);
         sentFrames++;
     }
 
-    if(i * appLayer.dataSize < size) {
+    if(i * appLayer.dataSize <= size) {
         memcpy(&data[0], &dataC[i*appLayer.dataSize], size - i * appLayer.dataSize);
         int framesize = createDataPacket(aux, numSeq, size - i * appLayer.dataSize, data);
         numSeq++;
+        printf("%d\n", numSeq);
         llwrite(aux,framesize);
         sentFrames++;
     }
 
     printf("%d packets sent!\n", sentFrames);
 
-
     unsigned char bufferend[MAX_FRAME_SIZE-6];
     result = createControlEndPacket(bufferend, hash);
     llwrite(bufferend,result);
-
-
 }
 
 void representloadingbar(int inicio, int size) {
