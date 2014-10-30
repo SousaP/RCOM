@@ -93,6 +93,7 @@ int llclose() {
   }
 
   close(lLayer.fileDescriptor);
+
 }
 
 void dfaReceive(unsigned char* frame, int frameSize) {
@@ -403,7 +404,9 @@ int waitResponse() {
     while(TRUE) {
         unsigned char tmp[1];
         read(lLayer.fileDescriptor, tmp, sizeof(char));
-        printf("%x\n", tmp[0]);
+
+        read(lLayer.fileDescriptor, tmp, 1);
+
 
         if(pos == 0 && tmp[0] == FLAG) {
             pos++;

@@ -1,6 +1,6 @@
 #include "appLayer.h"
 
-#include <openssl/md5.h>  
+#include <openssl/md5.h>
 
 int size;
 int sequencenumber;
@@ -8,9 +8,9 @@ int sequencenumber;
 void transmitter() {
     sequencenumber = 0;
     appLayer.fileDescriptor = llopen(TRANSMITTER);
-    
+
     appWrite();
-    
+
     lldisc();
 }
 
@@ -33,8 +33,8 @@ void receiver() {
             break;
         } else if(bufferS < -1){
             failedFrames++;
-        } else {            
-            if(buffer[0] == 0){
+        } else {
+            if(buffer[0] == FRAME_C_I0){
                 receivedFrames++;
             }
         }
@@ -43,13 +43,13 @@ void receiver() {
         {
             printf("Start Transmission\n");
 
-            
+
             int sizelength=(int)buffer[2];
-            
+
             char sizechar[300];
             memcpy(&sizechar[0], &buffer[3], sizelength);
             size = atoi(&sizechar[0]);
-            
+
         }
         else if(buffer[0]==P_CONTROL_END)
         {
@@ -78,14 +78,14 @@ void receiver() {
                     continue;
                 }
             }
-            
+
             printf("Could not verify Checksum.\n");
         }
         else
         {
             if(bufferS > 4) {
 
-                
+
                 if((appLayer.sequenceNumber+1)%128 != buffer[1]) {
                     printf("ERROR: App Sequence Number");
                     continue;
@@ -94,16 +94,17 @@ void receiver() {
                 appLayer.sequenceNumber++;
 
                 int lengthtowrite = deleteDataFlags(towrite,buffer,bufferS);
-                
+
                 write(filewriter,towrite,lengthtowrite);
+                receivedFrames++;
 
 
                 sizeReceived += lengthtowrite;
                 n++;
-                
+
                 representloadingbar(sizeReceived,size);
             }
-             
+
         }
     }
 
@@ -118,12 +119,15 @@ void appWrite() {
     stat(appLayer.filename, &st);
     size = st.st_size;
 
-    
+    char * datacontent = (unsigned char *)malloc(size + 5);
+
     unsigned char bufferstart[MAX_FRAME_SIZE-6];
     int result = createStart(bufferstart);
     llwrite(bufferstart,result);
 
-    unsigned char * datacontent = (unsigned char *)malloc(size + 5);
+
+    unsigned char * datacontent = (char *)malloc(size + 5);
+
     int filewriter = open(appLayer.filename,O_RDONLY);
     if(read(filewriter,datacontent,size) == -1) {
         printf("ERROR: Open File\n");
@@ -134,7 +138,7 @@ void appWrite() {
     unsigned char md5sum[16];
     MD5(datacontent, size, md5sum);
 
-    
+
     int i;
     unsigned char data[MAX_FRAME_SIZE-6];
     unsigned char aux[MAX_FRAME_SIZE-6];
@@ -149,7 +153,7 @@ void appWrite() {
         sentFrames++;
     }
 
-    
+
     if(i * appLayer.dataSize < size) {
         memcpy(&data[0], &datacontent[i*appLayer.dataSize], size - i * appLayer.dataSize);
         int framesize = createDataFrame(aux, data, size - i * appLayer.dataSize);
@@ -185,13 +189,13 @@ int createDataFrame(unsigned char* aux, unsigned char* data, int dataSize) {
     aux[2]=(dataSize/256);
     aux[3]=dataSize%256;
 
-   
+
     int i;
     for(i=0;i<dataSize;i++) {
         aux[i+4] = data[i];
-        
+
     }
-    
+
 
     sequencenumber++;
 
@@ -199,9 +203,9 @@ int createDataFrame(unsigned char* aux, unsigned char* data, int dataSize) {
 }
 
 int createStart(unsigned char* aux) {
-    
+
     aux[0] = P_CONTROL_START;
-    
+
     aux[1] = P_T_SIZE;
     sprintf(&aux[3],"%d",size);
     aux[2] = strlen(&aux[3]);
@@ -231,7 +235,7 @@ void representloadingbar(int inicio, int size) {
     system("clear");
     int i = 0;
     printf("[");
-    
+
     int escrevetraco = (float)(1.0*inicio/size)*20.0;
     int escrevespaces = 20 - escrevetraco;
 
