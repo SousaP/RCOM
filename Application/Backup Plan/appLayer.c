@@ -55,7 +55,7 @@ void receiver() {
             printf("Transmission ended!\n");
             if(buffer[1] == P_T_SHA1) {
 
-                unsigned char * dataC = (char *)malloc(sizeReceived + 5);
+                char * dataC = (char *)malloc(sizeReceived + 5);
                 int filereader = open(appLayer.filename,O_RDONLY);
                 if(read(filereader,dataC,sizeReceived) != -1) {
 
@@ -98,7 +98,6 @@ void receiver() {
                 receivedFrames++;
                 sizeReceived += bufferS - 4;
                 n++;
-                
                // representloadingbar(sizeReceived, size);
             }
         }
@@ -129,11 +128,11 @@ void appWrite() {
 
     unsigned char hash[SHA_DIGEST_LENGTH];
     SHA1(dataC, size, hash);
-
+    
     unsigned char data[MAX_FRAME_SIZE-6];
     unsigned char aux[MAX_FRAME_SIZE-6];
     int sentFrames = 0;
-    int i;
+    int i; 
     for(i = 0; i < (int)size/appLayer.dataSize; i++) {
 
         memcpy(&data[0], &dataC[i*appLayer.dataSize], appLayer.dataSize);
