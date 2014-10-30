@@ -13,7 +13,7 @@ int stuffing(char* data, int size, char* stuffed){
             stuffed[j] = byte;
             i++;
             j++;
-            continue;            
+            continue;
         }
         else if(i == size-1) {
             stuffed[j] = byte;
