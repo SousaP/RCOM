@@ -2,11 +2,11 @@
 #define STUFFING
 
 #include "types.h"
-int stuffedSize(char* data, int size);
+int stuffedSize(unsigned char* data, int size);
 
-int stuffing(char* data, int size, char* stuffed);
+int stuffing(unsigned char* data, int size, unsigned char* stuffed);
 
-int unstuffing(char* stuffed, int size, char* data);
+int unstuffing(unsigned char* stuffed, int size, unsigned char* data);
 
 #endif
 

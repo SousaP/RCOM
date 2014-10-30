@@ -1,10 +1,10 @@
 #include "stuffing.h"
 
 
-int stuffing(char* data, int size, char* stuffed){
+int stuffing(unsigned char* data, int size, unsigned char* stuffed){
     int i = 0;
     int j = 0;
-    char byte;
+    unsigned char byte;
 
     while(i < size){
         byte = data[i];
@@ -43,10 +43,10 @@ int stuffing(char* data, int size, char* stuffed){
     return j;
 }
 
-int unstuffing(char* stuffed, int size, char* data){
+int unstuffing(unsigned char* stuffed, int size, unsigned char* data){
     int i = 0;
     int j = 0;
-    char byte;
+    unsigned char byte;
 
     while(i < size){
 

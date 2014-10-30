@@ -108,7 +108,7 @@ void dfaReceive(unsigned char* frame, int frameSize) {
 
 
     while(STOP == FALSE) {
-        char tmp[2];
+        unsigned char tmp[2];
         read(lLayer.fileDescriptor, tmp, 1);
 
         if (frame[framePos+1] == tmp[0]) {
@@ -130,7 +130,7 @@ void dfaReceive(unsigned char* frame, int frameSize) {
 
 int llwrite(unsigned char * buffer, int length) {
 
-    char uFrame[STUFF_MAX_SIZE];
+    unsigned char uFrame[STUFF_MAX_SIZE];
 
     int xor = 0;
     int i;
@@ -153,12 +153,12 @@ int llwrite(unsigned char * buffer, int length) {
     uFrame[4+length] = xor;
     uFrame[4+length+1] = FLAG;
 
-
-    lLayer.frameSize = stuffing(uFrame, 4+length+2, lLayer.frame);
     for(i = 0; i < 6 + length; i++) {
         printf("%x", uFrame[i]);
     }
 
+    lLayer.frameSize = stuffing(uFrame, 4+length+2, lLayer.frame);
+    
     lLayer.numFailedTransmissions = 0;
     resendFrame_alarm(0);
 
@@ -192,8 +192,8 @@ int llread(unsigned char * buffer, int length) {
         return -2;
     }
 
-    char sFrame[STUFF_MAX_SIZE];
-    char uFrame[MAX_FRAME_SIZE];
+    unsigned char sFrame[STUFF_MAX_SIZE];
+    unsigned char uFrame[MAX_FRAME_SIZE];
     int thisSequenceNumber;
 
     int pos = 0;
@@ -375,7 +375,7 @@ int lldisc() {
 
 
 
-    char discReceived[5];
+    unsigned char discReceived[5];
 
     discReceived[0] = FLAG;
     discReceived[1] = FRAME_A_R;
