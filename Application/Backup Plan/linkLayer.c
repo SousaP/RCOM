@@ -2,7 +2,7 @@
 #include "appLayer.h"
 
 
-void resendFrame_alarm(int signo) {
+void resendFrameAlrm(int signo) {
     if(lLayer.numFailedTransmissions >= lLayer.numTransmissions) {
         printf("ERROR: Timeout\n");
         llclose(lLayer.fileDescriptor);
@@ -16,7 +16,7 @@ void resendFrame_alarm(int signo) {
 
 int llopen(int type) {
 
-    signal(SIGALRM,resendFrame_alarm);
+    signal(SIGALRM,resendFrameAlrm);
 
     lLayer.fileDescriptor = open(lLayer.port, O_RDWR | O_NOCTTY );
     if (lLayer.fileDescriptor < 0) {
@@ -56,7 +56,7 @@ int llopen(int type) {
     creatFrame(ua,FRAME_A_T,FRAME_C_UA);
 
     if (type == RECEIVER) {
-        dfaReceive(set, 5);
+        validator(set, 5);
 
         write(lLayer.fileDescriptor,ua,5);
 
@@ -66,8 +66,8 @@ int llopen(int type) {
         lLayer.frameSize = 5;
         lLayer.numFailedTransmissions = 0;
 
-        resendFrame_alarm(0);
-        dfaReceive(ua, 5);
+        resendFrameAlrm(0);
+        validator(ua, 5);
 
 
         alarm(0);
@@ -90,7 +90,7 @@ int llclose() {
 
 }
 
-void dfaReceive(unsigned char* frame, int frameSize) {
+void validator(unsigned char* frame, int frameSize) {
 
     if (frameSize <= 0)
         return;
@@ -114,7 +114,6 @@ void dfaReceive(unsigned char* frame, int frameSize) {
             STOP = TRUE;
         }
     }
-
 }
 
 int llwrite(unsigned char * buffer, int length) {
@@ -142,25 +141,21 @@ int llwrite(unsigned char * buffer, int length) {
     uFrame[4+length] = xor;
     uFrame[4+length+1] = FLAG;
 
-    for(i = 0; i < 4+length+2; i++) {
-        printf("%x", uFrame[i]);
-    }
-
     lLayer.frameSize = stuffing(uFrame, 4+length+2, lLayer.frame);
 
     lLayer.numFailedTransmissions = 0;
-    resendFrame_alarm(0);
+    resendFrameAlrm(0);
 
     while(TRUE) {
-        int action = waitResponse();
+        int watDo = waitForSignal();
 
-        if(action == 0) {
+        if(watDo == 0) {
             alarm(0);
             break;
 
         } else {
             alarm(0);
-            resendFrame_alarm(0);
+            resendFrameAlrm(0);
         }
     }
 
@@ -197,26 +192,17 @@ int llread(unsigned char * buffer, int length) {
         if(sFrame[pos] == FLAG && flag == 0) {
             pos++;
             flag++;
-
-
         } else if(sFrame[pos] == FLAG && flag == 1 && pos == 1) {
             continue;
-
-
         } else if(sFrame[pos] == FLAG && flag == 1 && pos < 4) {
             pos = 1;
             flag = 1;
-
-
         } else if(sFrame[pos] != FLAG && flag == 0) {
             continue;
-
-
         } else if(flag == 1) {
-
             if(pos == 1){
                 if(sFrame[pos] != FRAME_A_T) {
-                    sendREJ(lLayer.sequenceNumber);
+                    sendREJsignal(lLayer.sequenceNumber);
                     return -4;
                 } else {
                     pos++;
@@ -231,32 +217,26 @@ int llread(unsigned char * buffer, int length) {
                     thisSequenceNumber = 1;
                     pos++;
                 } else {
-                    sendREJ(lLayer.sequenceNumber);
+                    sendREJsignal(lLayer.sequenceNumber);
                     return -4;
                 }
             } else if(pos == 3) {
                 if(sFrame[pos] != (sFrame[pos-2]^sFrame[pos-1]) ){
-                    sendREJ(thisSequenceNumber);
+                    sendREJsignal(thisSequenceNumber);
                     return -4;
                 } else {
                     pos++;
                 }
-
             } else if(sFrame[pos] == FLAG) {
                 pos++;
                 flag++;
-
-
             } else {
                 pos++;
             }
         }
     }
+
     int uFrameSize = unstuffing(sFrame, pos, uFrame);
-    int i;
-    for(i = 0; i < pos; i++) {
-        printf("%x", uFrame[i]);
-    }
 
     if(uFrameSize == 5) {
 
@@ -267,12 +247,12 @@ int llread(unsigned char * buffer, int length) {
             lLayer.frameSize = 5;
             lLayer.numFailedTransmissions = 0;
 
-            resendFrame_alarm(0);
+            resendFrameAlrm(0);
 
             unsigned char uaDisc[5];
             creatFrame(uaDisc,FRAME_A_R,FRAME_C_UA);
 
-            dfaReceive(uaDisc, 5);
+            validator(uaDisc, 5);
 
             alarm(0);
 
@@ -293,20 +273,17 @@ int llread(unsigned char * buffer, int length) {
 
 
         if(xor != uFrame[uFrameSize-2]) {
-            printf("**BCC2 - XOR FAILED**\n");
-            sendREJ(thisSequenceNumber);
+            printf("BCC comparasion failed\n");
+            sendREJsignal(thisSequenceNumber);
             return -4;
         }
     } else {
-        printf("Unexpected Error on llread()\n");
-        exit(-1);
+        printf("llread failed!)\n");
+        return -1;
     }
-
-
 
     if(length < lLayer.frameSize-7)
         return -2;
-
 
     unsigned char temp[5];
     temp[0] = FLAG;
@@ -343,13 +320,13 @@ creatFrame(lLayer.frame,FRAME_A_T,FRAME_C_DISC);
 
     lLayer.numFailedTransmissions = 0;
 
-    resendFrame_alarm(0);
+    resendFrameAlrm(0);
 
     unsigned char discReceived[5];
 
 creatFrame(discReceived,FRAME_A_R,FRAME_C_DISC);
 
-    dfaReceive(discReceived, 5);
+    validator(discReceived, 5);
 
     alarm(0);
 
@@ -358,13 +335,11 @@ creatFrame(lLayer.frame,FRAME_A_R,FRAME_C_UA);
     lLayer.frameSize = 5;
 
     write(lLayer.fileDescriptor, lLayer.frame, lLayer.frameSize);
-
-    sleep(2);
 }
 
-int waitResponse() {
+int waitForSignal() {
     int pos = 0;
-    int action = 0;
+    int watDo = 0;
     char rf[2];
     while(TRUE) {
         unsigned char tmp[1];
@@ -377,19 +352,19 @@ int waitResponse() {
             pos++;
         } else if(pos == 2 && lLayer.sequenceNumber == 0 && tmp[0] == FRAME_C_RR1) {
             rf[1] = tmp[0];
-            action = 0;
+            watDo = 0;
             pos++;
         } else if(pos == 2 && lLayer.sequenceNumber == 1 && tmp[0] == FRAME_C_RR0) {
             rf[1] = tmp[0];
-            action = 0;
+            watDo = 0;
             pos++;
         } else if(pos == 2 && lLayer.sequenceNumber == 0 && tmp[0] == FRAME_C_REJ1) {
             rf[1] = tmp[0];
-            action = 1;
+            watDo = 1;
             pos++;
         } else if(pos == 2 && lLayer.sequenceNumber == 1 && tmp[0] == FRAME_C_REJ0) {
             rf[1] = tmp[0];
-            action = 1;
+            watDo = 1;
             pos++;
         } else if(pos == 3 && tmp[0] == rf[0]^rf[1]) {
             pos++;
@@ -401,15 +376,15 @@ int waitResponse() {
             pos = 0;
         }
     }
-    return action;
+    return watDo;
 }
 
-void sendREJ(int sn) {
+void sendREJsignal(int sig) {
     unsigned char temp[5];
     temp[0] = FLAG;
     temp[1] = FRAME_A_T;
 
-    if(sn == 0) {
+    if(sig == 0) {
         temp[2] = FRAME_C_REJ1;
     } else {
         temp[2] = FRAME_C_REJ0;
@@ -420,5 +395,5 @@ void sendREJ(int sn) {
 
     write(lLayer.fileDescriptor, temp, 5);
 
-    printf("Sent REJ\n");
+    printf("Sent REJ signal\n");
 }

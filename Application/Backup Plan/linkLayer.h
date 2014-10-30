@@ -15,13 +15,13 @@ int llread(unsigned char * buffer, int length);
 
 int llclose();
 
-void dfaReceive(unsigned char* frame, int frameSize);
+void validator(unsigned char* frame, int frameSize);
 
-void resendFrame_alarm(int signo);
+void resendFrameAlrm(int signo);
 
-void sendREJ(int sn);
+void sendREJsignal(int sig);
 
-int waitResponse();
+int waitForSignal();
 
 
 #endif

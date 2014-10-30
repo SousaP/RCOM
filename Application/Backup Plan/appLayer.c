@@ -16,7 +16,7 @@ void transmitter() {
 
 void receiver() {
     int sizeReceived = 0;
-    int fileW = open(appLayer.filename,O_CREAT | O_WRONLY);
+    int fileW = open(appLayer.filename, O_WRONLY | O_CREAT, 0666);
     appLayer.fileDescriptor = llopen(RECEIVER);
     appLayer.sequenceNumber = -1;
 
@@ -118,7 +118,7 @@ void appWrite() {
     llwrite(bufferStartPacket,result);
 
     unsigned char * dataC = (char *)malloc(size + 5);
-    int fileW = open(appLayer.filename,O_RDONLY);
+    int fileW = open(appLayer.filename, O_RDONLY);
     if(read(fileW,dataC,size) == -1) {
         printf("ERROR: Open File\n");
         llclose();
@@ -140,7 +140,7 @@ void appWrite() {
         sentFrames++;
     }
 
-    if(i * appLayer.dataSize <= size) {
+    if(i * appLayer.dataSize < size) {
         memcpy(&data[0], &dataC[i*appLayer.dataSize], size - i * appLayer.dataSize);
         int framesize = createDataPacket(aux, numSeq, size - i * appLayer.dataSize, data);
         numSeq++;
