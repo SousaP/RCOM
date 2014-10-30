@@ -99,7 +99,7 @@ void receiver() {
                 sizeReceived += bufferS - 4;
                 n++;
                 
-                representloadingbar(sizeReceived, size);
+               // representloadingbar(sizeReceived, size);
             }
         }
     }

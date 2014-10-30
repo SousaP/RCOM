@@ -84,7 +84,7 @@ struct linkLayer {
   unsigned int timeout; /*Valor do temporizador: 1 s*/
   unsigned int numTransmissions; /*Número de tentativas em caso de falha*/
     unsigned int numFailedTransmissions; /*Número de tentativas falhadas*/
-  char frame[STUFF_MAX_SIZE]; /*Trama*/
+  unsigned char frame[STUFF_MAX_SIZE]; /*Trama*/
     int frameSize;
 };
 
