@@ -77,7 +77,7 @@ int llopen(int type) {
 
 int llclose() {
 
-    printf("Close\n");
+    printf("Transmition closed!\n");
     tcflush(lLayer.fileDescriptor, TCOFLUSH);
 
     if ( tcsetattr(lLayer.fileDescriptor, TCSANOW, &oldtio) == -1) {
