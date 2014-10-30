@@ -23,8 +23,8 @@ void receiver() {
     int receivedFrames = 0;
     int failedFrames = 0;
     int n = 0;
-    char buffer[MAX_FRAME_SIZE-6];
-    char towrite[MAX_FRAME_SIZE-6];
+    unsigned char buffer[MAX_FRAME_SIZE-6];
+    unsigned char towrite[MAX_FRAME_SIZE-6];
 
     while(TRUE) {
         int bufferS = llread(buffer, MAX_FRAME_SIZE-6);
@@ -62,7 +62,6 @@ void receiver() {
 
                     unsigned char hash[SHA_DIGEST_LENGTH];
                     SHA1(datacontent, sizeReceived, hash);
-
                     int i;
                     for(i = 0; i <= buffer[2]; i++) {
                         if(i == buffer[2]) {
@@ -121,12 +120,12 @@ void appWrite() {
     size = st.st_size;
 
 
-    char bufferstart[MAX_FRAME_SIZE-6];
+    unsigned char bufferstart[MAX_FRAME_SIZE-6];
     int result = createStart(bufferstart);
     llwrite(bufferstart,result);
 
 
-    char * datacontent = (char *)malloc(size + 5);
+    unsigned char * datacontent = (char *)malloc(size + 5);
     int filewriter = open(appLayer.filename,O_RDONLY);
     if(read(filewriter,datacontent,size) == -1) {
         printf("ERROR: Open File\n");
@@ -136,12 +135,11 @@ void appWrite() {
 
     unsigned char hash[SHA_DIGEST_LENGTH];
     SHA1(datacontent, size, hash);
-
-
-    int i;
-    char data[MAX_FRAME_SIZE-6];
-    char aux[MAX_FRAME_SIZE-6];
+    
+    unsigned char data[MAX_FRAME_SIZE-6];
+    unsigned char aux[MAX_FRAME_SIZE-6];
     int sentFrames = 0;
+    int i; 
     for(i = 0; i < (int)size/appLayer.dataSize; i++) {
 
         memcpy(&data[0], &datacontent[i*appLayer.dataSize], appLayer.dataSize);
@@ -163,7 +161,7 @@ void appWrite() {
     printf("%d packets sent!\n", sentFrames);
 
 
-    char bufferend[MAX_FRAME_SIZE-6];
+    unsigned char bufferend[MAX_FRAME_SIZE-6];
     result = createEnd(bufferend, hash);
     llwrite(bufferend,result);
 
@@ -225,8 +223,7 @@ int createEnd(unsigned char* aux, unsigned char* hash) {
     int i;
     for(i = 0; i < (int) SHA_DIGEST_LENGTH; i++)
         aux[i+3] = hash[i];
-    for(i = 0; i < (int) SHA_DIGEST_LENGTH; i++) 
-        printf("%x\n", hash[i]);
+
     return 3 + SHA_DIGEST_LENGTH;
 }
 
