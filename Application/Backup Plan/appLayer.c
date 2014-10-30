@@ -133,11 +133,9 @@ void appWrite() {
     int sentFrames = 0;
     int i;
     for(i = 0; i < (int)size/appLayer.dataSize; i++) {
-
         memcpy(&data[0], &dataC[i*appLayer.dataSize], appLayer.dataSize);
         int framesize = createDataPacket(aux,numSeq,appLayer.dataSize, data);
         numSeq++;
-        printf("%d\n", numSeq);
         llwrite(aux,framesize);
         sentFrames++;
     }
@@ -146,9 +144,9 @@ void appWrite() {
         memcpy(&data[0], &dataC[i*appLayer.dataSize], size - i * appLayer.dataSize);
         int framesize = createDataPacket(aux, numSeq, size - i * appLayer.dataSize, data);
         numSeq++;
-        printf("%d\n", numSeq);
         llwrite(aux,framesize);
         sentFrames++;
+
     }
 
     printf("%d packets sent!\n", sentFrames);
@@ -156,6 +154,7 @@ void appWrite() {
     unsigned char bufferend[MAX_FRAME_SIZE-6];
     result = createControlEndPacket(bufferend, hash);
     llwrite(bufferend,result);
+
 }
 
 void representloadingbar(int inicio, int size) {

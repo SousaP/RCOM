@@ -97,21 +97,17 @@ void dfaReceive(unsigned char* frame, int frameSize) {
 
     int STOP = FALSE;
     int framePos = -1;
-    int tries = 0;
-
 
     while(STOP == FALSE) {
-        unsigned char tmp[2];
+        unsigned char tmp[1];
         read(lLayer.fileDescriptor, tmp, 1);
 
         if (frame[framePos+1] == tmp[0]) {
             framePos++;
         } else if (frame[0] == tmp[0]) {
             framePos = 0;
-            tries++;
         } else {
             framePos = -1;
-            tries++;
         }
 
         if (framePos == frameSize-1) {
@@ -145,11 +141,11 @@ int llwrite(unsigned char * buffer, int length) {
 
     uFrame[4+length] = xor;
     uFrame[4+length+1] = FLAG;
-/*
-    for(i = 0; i < 6 + length; i++) {
+
+    for(i = 0; i < 4+length+2; i++) {
         printf("%x", uFrame[i]);
     }
-*/
+
     lLayer.frameSize = stuffing(uFrame, 4+length+2, lLayer.frame);
 
     lLayer.numFailedTransmissions = 0;
@@ -257,10 +253,11 @@ int llread(unsigned char * buffer, int length) {
         }
     }
     int uFrameSize = unstuffing(sFrame, pos, uFrame);
-  /*  int i;
-     for(i = 0; i < pos; i++) {
+    int i;
+    for(i = 0; i < pos; i++) {
         printf("%x", uFrame[i]);
-    }*/
+    }
+
     if(uFrameSize == 5) {
 
         if(uFrame[2] == FRAME_C_DISC) {
@@ -271,7 +268,6 @@ int llread(unsigned char * buffer, int length) {
             lLayer.numFailedTransmissions = 0;
 
             resendFrame_alarm(0);
-
 
             unsigned char uaDisc[5];
             creatFrame(uaDisc,FRAME_A_R,FRAME_C_UA);
@@ -335,8 +331,6 @@ int llread(unsigned char * buffer, int length) {
     else
         lLayer.sequenceNumber = 0;
 
-
-
     memcpy(&buffer[0], &uFrame[4], uFrameSize-6);
     return uFrameSize-6;
 }
@@ -350,8 +344,6 @@ creatFrame(lLayer.frame,FRAME_A_T,FRAME_C_DISC);
     lLayer.numFailedTransmissions = 0;
 
     resendFrame_alarm(0);
-
-
 
     unsigned char discReceived[5];
 
