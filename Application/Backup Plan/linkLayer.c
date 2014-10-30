@@ -404,7 +404,7 @@ int lldisc() {
 int waitResponse() {
     int pos = 0;
     int action = 0;
-    char rf[2];
+    unsigned char rf[2];
     while(TRUE) {
         unsigned char tmp[1];
         read(lLayer.fileDescriptor, tmp, 1);

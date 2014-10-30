@@ -4,7 +4,7 @@
 int stuffing(char* data, int size, char* stuffed){
     int i = 0;
     int j = 0;
-    char byte;
+    unsigned char byte;
 
     while(i < size){
         byte = data[i];
@@ -13,7 +13,7 @@ int stuffing(char* data, int size, char* stuffed){
             stuffed[j] = byte;
             i++;
             j++;
-            continue;            
+            continue;
         }
         else if(i == size-1) {
             stuffed[j] = byte;
@@ -46,7 +46,7 @@ int stuffing(char* data, int size, char* stuffed){
 int unstuffing(char* stuffed, int size, char* data){
     int i = 0;
     int j = 0;
-    char byte;
+    unsigned char byte;
 
     while(i < size){
 
