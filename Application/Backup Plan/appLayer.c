@@ -97,7 +97,7 @@ void receiver() {
                 receivedFrames++;
                 sizeReceived += bufferS - 4;
                 n++;
-                //representloadingbar(sizeReceived, size);
+                representloadingbar(sizeReceived, size);
             }
         }
     }
@@ -158,21 +158,19 @@ void appWrite() {
 }
 
 void representloadingbar(int inicio, int size) {
-
     system("clear");
     int i = 0;
-    printf("[");
 
-    int escrevetraco = (float)(1.0*inicio/size)*20.0;
-    int escrevespaces = 20 - escrevetraco;
+    int trace = (float)(1.0*inicio/size)*20.0;
+    int space = 20 - trace;
 
-    for(i = 0; i < escrevetraco; i++) {
-        printf("-");
+    for(i = 0; i < trace; i++) {
+        printf("\u25A0");
     }
 
-    for(i = 0; i < escrevespaces; i++) {
-        printf("  ");
+    for(i = 0; i < space; i++) {
+        printf(" ");
     }
 
-    printf("] %d / %d bytes \n",inicio,size);
+    printf(" %d / %d bytes \n",inicio,size);
 }
