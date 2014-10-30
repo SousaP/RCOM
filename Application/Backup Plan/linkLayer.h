@@ -7,21 +7,24 @@ struct termios oldtio, newtio;
 
 struct linkLayer lLayer;
 
+void resendFrameAlrm(int signo);
+
 int llopen(int type); //type = RECEIVER | TRANSMITTER
+
+int llclose();
 
 int llwrite(unsigned char * buffer, int length);
 
 int llread(unsigned char * buffer, int length);
 
-int llclose();
+int lldisc();
 
 void validator(unsigned char* frame, int frameSize);
 
-void resendFrameAlrm(int signo);
+int waitForSignal();
 
 void sendREJsignal(int sig);
 
-int waitForSignal();
-
+void createSupervisionFrame(char* frame, unsigned char A, unsigned char C);
 
 #endif

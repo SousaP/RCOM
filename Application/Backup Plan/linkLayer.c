@@ -1,7 +1,6 @@
 #include "linkLayer.h"
 #include "appLayer.h"
 
-
 void resendFrameAlrm(int signo) {
     if(lLayer.numFailedTransmissions >= lLayer.numTransmissions) {
         printf("ERROR: Timeout\n");
@@ -49,11 +48,11 @@ int llopen(int type) {
     }
 
     unsigned char set[5];
-    creatFrame(set,FRAME_A_T,FRAME_C_SET);
+    createSupervisionFrame(set,FRAME_A_T,FRAME_C_SET);
 
 
     unsigned char ua[5];
-    creatFrame(ua,FRAME_A_T,FRAME_C_UA);
+    createSupervisionFrame(ua,FRAME_A_T,FRAME_C_UA);
 
     if (type == RECEIVER) {
         validator(set, 5);
@@ -88,32 +87,6 @@ int llclose() {
 
   close(lLayer.fileDescriptor);
 
-}
-
-void validator(unsigned char* frame, int frameSize) {
-
-    if (frameSize <= 0)
-        return;
-
-    int STOP = FALSE;
-    int framePos = -1;
-
-    while(STOP == FALSE) {
-        unsigned char tmp[1];
-        read(lLayer.fileDescriptor, tmp, 1);
-
-        if (frame[framePos+1] == tmp[0]) {
-            framePos++;
-        } else if (frame[0] == tmp[0]) {
-            framePos = 0;
-        } else {
-            framePos = -1;
-        }
-
-        if (framePos == frameSize-1) {
-            STOP = TRUE;
-        }
-    }
 }
 
 int llwrite(unsigned char * buffer, int length) {
@@ -242,7 +215,7 @@ int llread(unsigned char * buffer, int length) {
 
         if(uFrame[2] == FRAME_C_DISC) {
 
-          creatFrame(lLayer.frame,FRAME_A_R,FRAME_C_DISC);
+          createSupervisionFrame(lLayer.frame,FRAME_A_R,FRAME_C_DISC);
 
             lLayer.frameSize = 5;
             lLayer.numFailedTransmissions = 0;
@@ -250,7 +223,7 @@ int llread(unsigned char * buffer, int length) {
             resendFrameAlrm(0);
 
             unsigned char uaDisc[5];
-            creatFrame(uaDisc,FRAME_A_R,FRAME_C_UA);
+            createSupervisionFrame(uaDisc,FRAME_A_R,FRAME_C_UA);
 
             validator(uaDisc, 5);
 
@@ -314,7 +287,7 @@ int llread(unsigned char * buffer, int length) {
 
 int lldisc() {
 
-creatFrame(lLayer.frame,FRAME_A_T,FRAME_C_DISC);
+createSupervisionFrame(lLayer.frame,FRAME_A_T,FRAME_C_DISC);
 
     lLayer.frameSize = 5;
 
@@ -324,17 +297,45 @@ creatFrame(lLayer.frame,FRAME_A_T,FRAME_C_DISC);
 
     unsigned char discReceived[5];
 
-creatFrame(discReceived,FRAME_A_R,FRAME_C_DISC);
+createSupervisionFrame(discReceived,FRAME_A_R,FRAME_C_DISC);
 
     validator(discReceived, 5);
 
     alarm(0);
 
-creatFrame(lLayer.frame,FRAME_A_R,FRAME_C_UA);
+createSupervisionFrame(lLayer.frame,FRAME_A_R,FRAME_C_UA);
 
     lLayer.frameSize = 5;
 
     write(lLayer.fileDescriptor, lLayer.frame, lLayer.frameSize);
+
+    return 0;
+}
+
+void validator(unsigned char* frame, int frameSize) {
+
+    if (frameSize <= 0)
+        return;
+
+    int STOP = FALSE;
+    int framePos = -1;
+
+    while(STOP == FALSE) {
+        unsigned char tmp[1];
+        read(lLayer.fileDescriptor, tmp, 1);
+
+        if (frame[framePos+1] == tmp[0]) {
+            framePos++;
+        } else if (frame[0] == tmp[0]) {
+            framePos = 0;
+        } else {
+            framePos = -1;
+        }
+
+        if (framePos == frameSize-1) {
+            STOP = TRUE;
+        }
+    }
 }
 
 int waitForSignal() {
@@ -396,4 +397,12 @@ void sendREJsignal(int sig) {
     write(lLayer.fileDescriptor, temp, 5);
 
     printf("Sent REJ signal\n");
+}
+
+void createSupervisionFrame(char* frame, unsigned char A, unsigned char C){
+    frame[0] = FLAG;
+    frame[1] = A;
+    frame[2] = C;
+    frame[3] = A^C;
+    frame[4] = FLAG;
 }

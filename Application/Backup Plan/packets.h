@@ -10,6 +10,6 @@ int createControlStartPacket(char* packet, unsigned char* filename, int size);
 
 int createControlEndPacket(char* packet, unsigned char* hash);
 
-void creatFrame(char* frame, unsigned char A, unsigned char C);
+void createSupervisionFrame(char* frame, unsigned char A, unsigned char C);
 
 #endif
