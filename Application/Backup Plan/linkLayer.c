@@ -49,18 +49,11 @@ int llopen(int type) {
     }
 
     unsigned char set[5];
-    set[0] = FLAG;
-    set[1] = FRAME_A_T;
-    set[2] = FRAME_C_SET;
-    set[3] = FRAME_A_T^FRAME_C_SET;
-    set[4] = FLAG;
+    creatFrame(set,FRAME_A_T,FRAME_C_SET);
+
 
     unsigned char ua[5];
-    ua[0] = FLAG;
-    ua[1] = FRAME_A_T;
-    ua[2] = FRAME_C_UA;
-    ua[3] = FRAME_A_T^FRAME_C_UA;
-    ua[4] = FLAG;
+    creatFrame(ua,FRAME_A_T,FRAME_C_UA);
 
     if (type == RECEIVER) {
         dfaReceive(set, 5);
@@ -158,7 +151,7 @@ int llwrite(unsigned char * buffer, int length) {
     }
 */
     lLayer.frameSize = stuffing(uFrame, 4+length+2, lLayer.frame);
-    
+
     lLayer.numFailedTransmissions = 0;
     resendFrame_alarm(0);
 
@@ -272,12 +265,7 @@ int llread(unsigned char * buffer, int length) {
 
         if(uFrame[2] == FRAME_C_DISC) {
 
-
-            lLayer.frame[0] = FLAG;
-            lLayer.frame[1] = FRAME_A_R;
-            lLayer.frame[2] = FRAME_C_DISC;
-            lLayer.frame[3] = lLayer.frame[1]^lLayer.frame[2];
-            lLayer.frame[4] = FLAG;
+          creatFrame(lLayer.frame,FRAME_A_R,FRAME_C_DISC);
 
             lLayer.frameSize = 5;
             lLayer.numFailedTransmissions = 0;
@@ -286,11 +274,7 @@ int llread(unsigned char * buffer, int length) {
 
 
             unsigned char uaDisc[5];
-            uaDisc[0] = FLAG;
-            uaDisc[1] = FRAME_A_R;
-            uaDisc[2] = FRAME_C_UA;
-            uaDisc[3] = uaDisc[1]^uaDisc[2];
-            uaDisc[4] = FLAG;
+            creatFrame(uaDisc,FRAME_A_R,FRAME_C_UA);
 
             dfaReceive(uaDisc, 5);
 
@@ -359,11 +343,7 @@ int llread(unsigned char * buffer, int length) {
 
 int lldisc() {
 
-    lLayer.frame[0] = FLAG;
-    lLayer.frame[1] = FRAME_A_T;
-    lLayer.frame[2] = FRAME_C_DISC;
-    lLayer.frame[3] = lLayer.frame[1]^lLayer.frame[2];
-    lLayer.frame[4] = FLAG;
+creatFrame(lLayer.frame,FRAME_A_T,FRAME_C_DISC);
 
     lLayer.frameSize = 5;
 
@@ -375,22 +355,13 @@ int lldisc() {
 
     unsigned char discReceived[5];
 
-    discReceived[0] = FLAG;
-    discReceived[1] = FRAME_A_R;
-    discReceived[2] = FRAME_C_DISC;
-    discReceived[3] = discReceived[1]^discReceived[2];
-    discReceived[4] = FLAG;
+creatFrame(discReceived,FRAME_A_R,FRAME_C_DISC);
 
     dfaReceive(discReceived, 5);
 
     alarm(0);
 
-
-    lLayer.frame[0] = FLAG;
-    lLayer.frame[1] = FRAME_A_R;
-    lLayer.frame[2] = FRAME_C_UA;
-    lLayer.frame[3] = lLayer.frame[1]^lLayer.frame[2];
-    lLayer.frame[4] = FLAG;
+creatFrame(lLayer.frame,FRAME_A_R,FRAME_C_UA);
 
     lLayer.frameSize = 5;
 

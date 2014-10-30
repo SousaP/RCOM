@@ -57,3 +57,13 @@ int createControlEndPacket(char* packet, unsigned char* hash) {
 
     return 3 + SHA_DIGEST_LENGTH;
 }
+
+
+
+void creatFrame(char* frame, unsigned char A, unsigned char C){
+	frame[0] = FLAG;
+	frame[1] = A;
+	frame[2] = C;
+	frame[3] = A^C;
+	frame[4] = FLAG;
+}
