@@ -1,0 +1,64 @@
+//Fazer no inicio da configuração em cada pc
+service networking restart
+
+Tux 41
+
+ifconfig eth0
+ifconfig eth0 up					
+ifconfig eth0 172.16.40.1/24
+
+#Need route?
+route add -net 172.16.41.0/24 gw 172.16.40.254		
+route add default gw 172.16.40.254
+
+
+Tux 44
+
+ifconfig eth0
+ifconfig eth0 up
+ifconfig eth0 172.16.40.254/24
+ifconfig eth1
+ifconfig eth1 up
+ifconfig eth1 172.16.41.253/24
+
+#Need route?
+route add default gw 172.16.41.254
+
+
+Tux 42
+
+ifconfig eth0
+ifconfig eth0 up
+ifconfig eth0 172.16.41.1/24
+
+#Need route?
+route add -net 172.16.40.0/24 gw 172.16.41.253		
+route add default gw 172.16.41.253
+
+//Create Vlans
+
+configure terminal
+vlan 40
+
+interface fastethernet 0/1
+switchport mode access
+switchport access vlan 40
+
+interface fastethernet 0/2
+switchport mode access
+switchport access vlan 40
+
+vlan 41
+interface fastethernet 0/3
+switchport mode access
+switchport access vlan 41
+
+interface fastethernet 0/4
+switchport mode access
+switchport access vlan 41
+
+interface fastethernet 0/5
+switchport mode access
+switchport access vlan 41
+
+end
